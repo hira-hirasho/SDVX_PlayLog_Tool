@@ -1,0 +1,735 @@
+import { createPortal } from 'react-dom'
+import { useEffect, useRef, useState } from 'react'
+
+import type { PlayLogRow } from '../../types/playLog'
+import { FxStyles } from '../effects/FxStyles'
+
+import {
+  difficultyColors,
+  gradeColors,
+  getGrade,
+  formatScore,
+  formatDelta,
+  formatDate,
+  getDeltaClass,
+} from '../../utils/playLog'
+
+export function DetailView({
+  row,
+  onBack,
+}: {
+  row: PlayLogRow
+  onBack: () => void
+}) {
+  const grade = getGrade(row.score)
+  const gradeColor = gradeColors[grade] ?? '#888'
+  const difficultyColor = difficultyColors[row.difficulty] ?? '#888'
+
+  const [media, setMedia] = useState<{
+    resultImage: string | null
+    replayVideo: string | null
+  }>({
+    resultImage: null,
+    replayVideo: null,
+  })
+
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false)
+  const [imageZoom, setImageZoom] = useState(1)
+  const [imageOffset, setImageOffset] = useState({ x: 0, y: 0 })
+  const [isDraggingImage, setIsDraggingImage] = useState(false)
+
+  const dragStartRef = useRef({ x: 0, y: 0 })
+  const offsetStartRef = useRef({ x: 0, y: 0 })
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadMedia = async () => {
+      const result = await window.api.getPlayMedia(row.play_id)
+
+      if (!cancelled) {
+        setMedia(result)
+      }
+    }
+
+    void loadMedia()
+
+    return () => {
+      cancelled = true
+    }
+  }, [row.play_id])
+
+  useEffect(() => {
+    if (!isImagePreviewOpen) return
+
+    const originalBodyOverflow = document.body.style.overflow
+    const originalHtmlOverflow = document.documentElement.style.overflow
+
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsImagePreviewOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow
+      document.documentElement.style.overflow = originalHtmlOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isImagePreviewOpen])
+
+  return (
+    <div className="plg-page-in relative min-h-screen overflow-hidden bg-[#03050a] text-zinc-100">
+      <FxStyles />
+
+      {/* Global animated atmosphere */}
+      <div className="plg-grid-anim pointer-events-none fixed inset-0 opacity-20 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-size-[40px_40px]" />
+
+      {/* Deep ambient light field */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="plg-ambient-cyan absolute left-[-20%] top-[-25%] h-[90vh] w-[90vw] rounded-full bg-cyan-400/20 blur-[160px]" />
+
+        <div className="plg-ambient-magenta absolute bottom-[-25%] right-[-20%] h-[85vh] w-[85vw] rounded-full bg-fuchsia-500/15 blur-[150px]" />
+
+        {/* Central depth field */}
+        <div className="plg-depth-pulse absolute left-1/2 top-1/2 h-[65vh] w-[65vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/5 blur-[110px]" />
+
+        {/* Very slow orbital atmosphere */}
+        <div className="plg-orbit absolute left-1/2 top-1/2 h-[75vh] w-[75vw] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/5" />
+      </div>
+
+      {/* Soft vertical system scan */}
+      <div className="plg-scan-line pointer-events-none fixed inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/40 to-transparent blur-[1px]" />
+
+      {/* Edge atmosphere */}
+      <div className="pointer-events-none fixed inset-0 bg-linear-to-br from-cyan-400/2 via-transparent to-fuchsia-500/3" />
+
+      <div className="pointer-events-none fixed left-0 top-0 h-screen w-px bg-linear-to-b from-cyan-400 via-cyan-400/20 to-transparent" />
+
+      <div className="pointer-events-none fixed right-0 top-0 h-screen w-px bg-linear-to-b from-fuchsia-500 via-fuchsia-500/20 to-transparent" />
+
+      {/* Animated background energy field */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        {/* Moving cyan atmosphere */}
+        <div className="plg-orb-cyan absolute left-[-15%] top-[-15%] h-[70vh] w-[70vw] rounded-full bg-cyan-400/20 blur-[140px]" />
+
+        {/* Moving magenta atmosphere */}
+        <div className="plg-orb-magenta absolute right-[-15%] bottom-[-15%] h-[65vh] w-[65vw] rounded-full bg-fuchsia-500/20 blur-[130px]" />
+
+        {/* Horizontal energy sweep */}
+        <div className="plg-energy-line absolute left-0 top-[28%] h-px w-[75vw] bg-linear-to-r from-transparent via-cyan-300/70 to-transparent blur-[1px]" />
+
+        {/* Reverse energy sweep */}
+        <div className="plg-energy-line-reverse absolute right-0 top-[68%] h-px w-[80vw] bg-linear-to-r from-transparent via-fuchsia-400/60 to-transparent blur-[1px]" />
+
+        {/* Fast vertical scan */}
+        <div className="plg-scan-line-fast absolute left-[28%] top-0 h-px w-[45vw] rotate-90 bg-linear-to-r from-transparent via-cyan-300/60 to-transparent blur-[1px]" />
+
+        {/* Secondary vertical scan */}
+        <div className="plg-scan-line-fast absolute right-[22%] top-0 h-px w-[38vw] rotate-90 bg-linear-to-r from-transparent via-fuchsia-300/50 to-transparent blur-[1px]" />
+      </div>
+
+      {/* Left system rail */}
+      <aside className="fixed bottom-0 left-0 top-0 hidden w-18 border-r border-zinc-900/90 bg-[#03050a]/95 lg:flex lg:flex-col lg:items-center">
+        <div className="flex w-full flex-col items-center">
+          <div className="relative flex h-20 w-full items-center justify-center border-b border-zinc-900">
+            <div className="absolute left-0 top-0 h-px w-8 bg-cyan-400" />
+
+            <div className="relative flex h-9 w-9 items-center justify-center border border-cyan-400/60 bg-cyan-400/4 font-black text-cyan-300">
+              <span className="text-sm">S</span>
+
+              <span className="absolute -right-1 -top-1 h-1.5 w-1.5 bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.9)]" />
+
+              <span className="absolute -bottom-1 -left-1 h-1.5 w-1.5 bg-fuchsia-400 shadow-[0_0_6px_rgba(232,121,249,0.8)]" />
+            </div>
+          </div>
+
+          <div className="mt-8 flex w-full flex-col items-center gap-6">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-1.5 w-1.5 animate-pulse bg-emerald-400 shadow-[0_0_7px_rgba(74,222,128,0.8)]" />
+
+              <span className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-500 [writing-mode:vertical-rl]">
+                ONLINE
+              </span>
+            </div>
+
+            <div className="h-10 w-px bg-linear-to-b from-cyan-400/40 to-transparent" />
+
+            <div className="flex flex-col items-center gap-2 text-cyan-400/70">
+              <span className="font-mono text-[11px]">02</span>
+
+              <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] [writing-mode:vertical-rl]">
+                RECORD
+              </span>
+            </div>
+
+            <div className="h-10 w-px bg-linear-to-b from-transparent to-zinc-900" />
+
+            <div className="flex flex-col items-center gap-2 text-zinc-800">
+              <span className="text-sm">◇</span>
+
+              <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] [writing-mode:vertical-rl]">
+                ARCHIVE
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-auto mb-8 flex flex-col items-center gap-3">
+          <span className="h-8 w-px bg-linear-to-b from-zinc-800 to-transparent" />
+
+          <span className="rotate-180 font-mono text-[9px] font-bold tracking-[0.3em] text-zinc-600 [writing-mode:vertical-rl]">
+            PLAYLOG SYSTEM
+          </span>
+        </div>
+      </aside>
+
+      <div className="relative lg:pl-18">
+        {/* Header */}
+        <header className="relative overflow-hidden border-b border-zinc-900 bg-[#060910]/95">
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-cyan-400 via-fuchsia-500 to-transparent shadow-[0_0_10px_rgba(34,211,238,0.4)]" />
+
+          <div className="absolute left-0 top-0 h-20 w-[32%] opacity-30 bg-[linear-gradient(135deg,transparent_0%,transparent_47%,rgba(34,211,238,0.16)_48%,transparent_49%,transparent_58%,rgba(34,211,238,0.07)_59%,transparent_60%)]" />
+
+          <div className="absolute right-0 top-0 h-full w-[45%] opacity-30 bg-[linear-gradient(135deg,transparent_0%,transparent_48%,rgba(34,211,238,0.15)_49%,transparent_50%,transparent_58%,rgba(217,70,239,0.12)_59%,transparent_60%)]" />
+
+          <div className="relative mx-auto max-w-[1600px] px-6 py-6">
+            <div className="flex items-center justify-between gap-6">
+              <div>
+                <div className="mb-2 flex items-center gap-3">
+                  <span className="h-px w-8 bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.5)]" />
+
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.38em] text-cyan-300/80">
+                    SOUND VOLTEX
+                  </span>
+
+                  <span className="h-1 w-1 bg-fuchsia-400" />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-2xl font-black italic uppercase tracking-[0.12em] text-white sm:text-3xl">
+                    <span className="text-cyan-300">SDVX</span>
+                    <span className="mx-2 text-zinc-700">/</span>
+                    PLAYLOG
+                  </span>
+
+                  <span className="hidden h-px w-12 bg-fuchsia-400/60 sm:block" />
+
+                  <span className="hidden font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-fuchsia-300 sm:block">
+                    RECORD DETAIL
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onBack}
+                className="group relative overflow-hidden border border-zinc-800 bg-[#070a10] px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
+              >
+                <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
+
+                <span className="flex items-center gap-3">
+                  <span className="text-lg transition-transform group-hover:-translate-x-1">
+                    ←
+                  </span>
+                  HISTORY
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-cyan-400/60 via-zinc-800 to-fuchsia-400/40" />
+        </header>
+
+        <main className="relative mx-auto max-w-325 px-6 py-6">
+          {/* Record hero */}
+          <section className="relative overflow-hidden border border-zinc-800 bg-[#060910]/95">
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-cyan-400/3 via-transparent to-fuchsia-500/4" />
+
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-[38%] opacity-40 bg-[linear-gradient(135deg,transparent_0%,transparent_47%,rgba(34,211,238,0.12)_48%,transparent_49%,transparent_57%,rgba(217,70,239,0.10)_58%,transparent_59%)]" />
+
+            <div
+              className="absolute left-0 top-0 h-1 w-full"
+              style={{
+                backgroundColor: gradeColor,
+                boxShadow: `0 0 18px ${gradeColor}88`,
+              }}
+            />
+
+            <div className="relative grid gap-0 lg:grid-cols-[minmax(0,1fr)_250px]">
+              <div className="p-7 sm:p-9 lg:p-10">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="h-px w-12 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.7)]" />
+
+                  <span className="font-mono text-xs font-bold uppercase tracking-[0.3em] text-cyan-300">
+                    RECORD / PERFORMANCE
+                  </span>
+                </div>
+
+                <div className="mb-6 flex flex-wrap items-center gap-3">
+                  <span
+                    className="flex h-10 w-16 items-center justify-center border text-base font-black"
+                    style={{
+                      color: difficultyColor,
+                      borderColor: `${difficultyColor}99`,
+                      backgroundColor: `${difficultyColor}12`,
+                      boxShadow: `0 0 18px ${difficultyColor}18`,
+                    }}
+                  >
+                    {row.difficulty}
+                  </span>
+
+                  <span className="font-mono text-xl font-black tracking-wide text-zinc-200">
+                    LEVEL {row.level}
+                  </span>
+
+                  <span className="h-1 w-1 bg-zinc-700" />
+
+                  <span className="font-mono text-sm font-semibold tracking-wide text-zinc-500">
+                    {formatDate(row.played_at)}
+                  </span>
+                </div>
+
+                <h1
+                  className="wrap-break-word font-mono text-4xl font-black uppercase leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl"
+                  title={row.song_name}
+                >
+                  {row.song_name}
+                </h1>
+
+                <p
+                  className="mt-4 wrap-break-word font-mono text-lg font-semibold text-zinc-500 sm:text-xl"
+                  title={row.artist}
+                >
+                  {row.artist}
+                </p>
+
+                <div className="mt-8 h-px w-full bg-linear-to-r from-cyan-400/50 via-zinc-800 to-transparent" />
+
+                <div className="mt-7 grid gap-6 sm:grid-cols-2">
+                  <div>
+                    <div className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-zinc-500">
+                      SCORE
+                    </div>
+
+                    <div className="mt-2 font-mono text-4xl font-black tabular-nums text-white sm:text-5xl">
+                      {formatScore(row.score)}
+                    </div>
+
+                    <div
+                      className={`mt-2 font-mono text-lg font-black tabular-nums ${getDeltaClass(row.score_delta)}`}
+                    >
+                      {formatDelta(row.score_delta)}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-zinc-500">
+                      EX SCORE
+                    </div>
+
+                    <div className="mt-2 font-mono text-3xl font-black tabular-nums text-zinc-200 sm:text-4xl">
+                      {formatScore(row.ex_score)}
+                    </div>
+
+                    <div
+                      className={`mt-2 font-mono text-lg font-black tabular-nums ${getDeltaClass(row.ex_score_delta)}`}
+                    >
+                      {formatDelta(row.ex_score_delta)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grade terminal — the one focal "stamp" moment of this screen */}
+              <div className="relative flex min-h-64 flex-col items-center justify-center border-t border-zinc-800 bg-[#04070c]/80 p-8 lg:border-l lg:border-t-0">
+              <div
+                className="absolute right-5 top-5 font-mono text-sm font-black uppercase tracking-[0.28em]"
+                style={{
+                  color: gradeColor,
+                  textShadow: `0 0 10px ${gradeColor}66`,
+                }}
+              >
+                GRADE
+              </div>
+
+                <div className="relative flex h-40 w-40 items-center justify-center">
+                  <span
+                    className="plg-glow-pulse absolute inset-0"
+                    style={{ boxShadow: `0 0 60px ${gradeColor}55` }}
+                  />
+
+                  <div
+                    className="plg-stamp-in relative flex h-full w-full items-center justify-center border"
+                    style={{
+                      color: gradeColor,
+                      borderColor: `${gradeColor}66`,
+                      backgroundColor: `${gradeColor}0d`,
+                      boxShadow: `inset 0 0 30px ${gradeColor}08`,
+                    }}
+                  >
+                    <span
+                      className="absolute inset-3 border border-dashed"
+                      style={{ borderColor: `${gradeColor}25` }}
+                    />
+
+                    <span className="relative font-mono text-7xl font-black italic drop-shadow-[0_0_16px_currentColor]">
+                      {grade}
+                    </span>
+
+                    <span
+                      className="absolute bottom-0 left-0 h-1 w-full"
+                      style={{
+                        backgroundColor: gradeColor,
+                        boxShadow: `0 0 14px ${gradeColor}`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Media */}
+          <section className="relative mt-7">
+            <div className="mb-4 flex items-center gap-4">
+              <span className="h-px w-10 bg-cyan-400 shadow-[0_0_7px_rgba(34,211,238,0.5)]" />
+
+              <span className="font-mono text-sm font-black uppercase tracking-[0.28em] text-zinc-300">
+                MEDIA STREAM
+              </span>
+
+              <span className="h-px flex-1 bg-zinc-800" />
+
+              <span className="hidden font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-600 sm:block">
+                PLAYBACK DATA
+              </span>
+            </div>
+
+            <div
+              className={`grid gap-8 ${
+                media.resultImage && media.replayVideo
+                  ? 'grid-cols-2'
+                  : 'grid-cols-1'
+              }`}
+            >
+              {media.resultImage || !media.replayVideo ? (
+                <div
+                  className={`group relative mx-auto w-full overflow-hidden border border-zinc-800 bg-[#05070c] transition-all hover:border-cyan-400/50 hover:shadow-[0_0_28px_rgba(34,211,238,0.08)] ${
+                    media.replayVideo ? '' : 'max-w-150'
+                  }`}
+                >
+                  <div className="absolute left-0 top-0 h-px w-20 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)] transition-all duration-500 group-hover:w-full" />
+
+                  <div className="flex items-center justify-between border-b border-zinc-800 bg-[#070a10] px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="h-1.5 w-1.5 bg-cyan-400 shadow-[0_0_7px_rgba(34,211,238,0.9)]" />
+                      <span className="font-mono text-sm font-black uppercase tracking-[0.2em] text-cyan-300">
+                        RESULT IMAGE
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="relative overflow-hidden bg-[#03050a] p-4 aspect-5/7">
+                    <div className="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(34,211,238,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.08)_1px,transparent_1px)] bg-size-[24px_24px]" />
+
+                    {media.resultImage ? (
+                      <button
+                        type="button"
+                        className="relative flex h-full w-full cursor-zoom-in items-center justify-center border border-zinc-800 bg-[#05070c]"
+                        onClick={() => {
+                          setImageZoom(1)
+                          setImageOffset({ x: 0, y: 0 })
+                          setIsImagePreviewOpen(true)
+                        }}
+                      >
+                        <img
+                          src={media.resultImage}
+                          alt="Result"
+                          className="h-full w-full object-contain"
+                        />
+                      </button>
+                    ) : (
+                      <div className="relative flex h-full items-center justify-center border border-dashed border-zinc-800 bg-[#05070c] font-mono text-sm font-bold uppercase tracking-[0.25em] text-zinc-700">
+                        RESULT.PNG
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
+              {media.replayVideo ? (
+                <div
+                  className={`group relative mx-auto w-full overflow-hidden border border-zinc-800 bg-[#05070c] transition-all hover:border-fuchsia-400/50 hover:shadow-[0_0_28px_rgba(217,70,239,0.08)] ${
+                    media.resultImage ? '' : 'max-w-150'
+                  }`}
+                >
+                  <div className="absolute left-0 top-0 h-px w-20 bg-fuchsia-400 shadow-[0_0_10px_rgba(217,70,239,0.8)] transition-all duration-500 group-hover:w-full" />
+
+                  <div className="flex items-center justify-between border-b border-zinc-800 bg-[#070a10] px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="h-1.5 w-1.5 bg-fuchsia-400 shadow-[0_0_7px_rgba(217,70,239,0.9)]" />
+                      <span className="font-mono text-sm font-black uppercase tracking-[0.2em] text-fuchsia-300">
+                        REPLAY VIDEO
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="relative overflow-hidden bg-[#03050a] p-4 aspect-5/7">
+                    <div className="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(217,70,239,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(217,70,239,0.07)_1px,transparent_1px)] bg-size-[24px_24px]" />
+
+                    <div className="relative flex h-full items-center justify-center border border-zinc-800 bg-[#05070c]">
+                      <video
+                        src={media.replayVideo}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+          </section>
+          {isImagePreviewOpen && media.resultImage
+            ? createPortal(
+                <div
+                  className="fixed inset-0 z-100 flex h-screen w-screen items-center justify-center overflow-hidden bg-black/80"
+                  onClick={(event) => {
+                    if (event.target === event.currentTarget) {
+                      setIsImagePreviewOpen(false)
+                    }
+                  }}
+                  onWheel={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+
+                    const rect =
+                      event.currentTarget.getBoundingClientRect()
+
+                    const cursorX =
+                      event.clientX - rect.left - rect.width / 2
+                    const cursorY =
+                      event.clientY - rect.top - rect.height / 2
+
+                    const oldZoom = imageZoom
+
+                    const newZoom = Math.min(
+                      4,
+                      Math.max(
+                        0.5,
+                        oldZoom +
+                          (event.deltaY < 0 ? 0.1 : -0.1),
+                      ),
+                    )
+
+                    if (newZoom === oldZoom) return
+
+                    const zoomRatio = newZoom / oldZoom
+
+                    setImageOffset((current) => ({
+                      x:
+                        cursorX -
+                        (cursorX - current.x) * zoomRatio,
+                      y:
+                        cursorY -
+                        (cursorY - current.y) * zoomRatio,
+                    }))
+
+                    setImageZoom(newZoom)
+                  }}
+                >
+                  {/* CLOSE */}
+                  <button
+                    type="button"
+                    className="absolute right-6 top-6 z-30 flex h-10 w-10 items-center justify-center border border-zinc-700 bg-[#070a10] font-mono text-xl text-zinc-300 transition hover:border-cyan-400 hover:text-cyan-300"
+                    onClick={() => {
+                      setIsImagePreviewOpen(false)
+                    }}
+                    aria-label="Close preview"
+                  >
+                    ×
+                  </button>
+
+                  {/* IMAGE AREA */}
+                  <div
+                    className="relative flex items-center justify-center"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                    }}
+                  >
+                    <img
+                      src={media.resultImage}
+                      alt="Result preview"
+                      draggable={false}
+                      className={`max-h-[90vh] max-w-[90vw] object-contain ${
+                        isDraggingImage
+                          ? 'cursor-grabbing'
+                          : 'cursor-grab'
+                      }`}
+                      onPointerDown={(event) => {
+                        if (event.button !== 0) return
+
+                        dragStartRef.current = {
+                          x: event.clientX,
+                          y: event.clientY,
+                        }
+
+                        offsetStartRef.current = imageOffset
+
+                        event.currentTarget.setPointerCapture(
+                          event.pointerId,
+                        )
+
+                        setIsDraggingImage(false)
+                      }}
+                      onPointerMove={(event) => {
+                        if (
+                          !event.currentTarget.hasPointerCapture(
+                            event.pointerId,
+                          )
+                        ) {
+                          return
+                        }
+
+                        const deltaX =
+                          event.clientX -
+                          dragStartRef.current.x
+
+                        const deltaY =
+                          event.clientY -
+                          dragStartRef.current.y
+
+                        // クリックだけではドラッグ開始しない
+                        if (
+                          !isDraggingImage &&
+                          Math.abs(deltaX) < 5 &&
+                          Math.abs(deltaY) < 5
+                        ) {
+                          return
+                        }
+
+                        setIsDraggingImage(true)
+
+                        setImageOffset({
+                          x:
+                            offsetStartRef.current.x +
+                            deltaX,
+                          y:
+                            offsetStartRef.current.y +
+                            deltaY,
+                        })
+                      }}
+                      onPointerUp={(event) => {
+                        setIsDraggingImage(false)
+
+                        if (
+                          event.currentTarget.hasPointerCapture(
+                            event.pointerId,
+                          )
+                        ) {
+                          event.currentTarget.releasePointerCapture(
+                            event.pointerId,
+                          )
+                        }
+                      }}
+                      onPointerCancel={(event) => {
+                        setIsDraggingImage(false)
+
+                        if (
+                          event.currentTarget.hasPointerCapture(
+                            event.pointerId,
+                          )
+                        ) {
+                          event.currentTarget.releasePointerCapture(
+                            event.pointerId,
+                          )
+                        }
+                      }}
+                      style={{
+                        transform: `translate3d(${imageOffset.x}px, ${imageOffset.y}px, 0) scale(${imageZoom})`,
+                        transformOrigin: 'center center',
+                      }}
+                    />
+
+                    {/* CONTROLS */}
+                    <div
+                      className="absolute bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 border border-zinc-700 bg-[#070a10]/95 p-2"
+                      onPointerDown={(event) => {
+                        event.stopPropagation()
+                      }}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className="flex h-9 w-9 items-center justify-center border border-zinc-700 font-mono text-lg text-zinc-300 hover:border-cyan-400 hover:text-cyan-300"
+                        onClick={() => {
+                          const newZoom = Math.max(
+                            0.5,
+                            imageZoom - 0.2,
+                          )
+
+                          setImageZoom(newZoom)
+
+                          if (newZoom === 1) {
+                            setImageOffset({
+                              x: 0,
+                              y: 0,
+                            })
+                          }
+                        }}
+                      >
+                        −
+                      </button>
+
+                      <span className="min-w-14 text-center font-mono text-xs text-zinc-400">
+                        {Math.round(imageZoom * 100)}%
+                      </span>
+
+                      <button
+                        type="button"
+                        className="flex h-9 w-9 items-center justify-center border border-zinc-700 font-mono text-lg text-zinc-300 hover:border-cyan-400 hover:text-cyan-300"
+                        onClick={() => {
+                          setImageZoom((current) =>
+                            Math.min(4, current + 0.2),
+                          )
+                        }}
+                      >
+                        +
+                      </button>
+
+                      <button
+                        type="button"
+                        className="ml-2 border-l border-zinc-700 px-3 font-mono text-xs text-zinc-500 hover:text-cyan-300"
+                        onClick={() => {
+                          setImageZoom(1)
+                          setImageOffset({
+                            x: 0,
+                            y: 0,
+                          })
+                        }}
+                      >
+                        RESET
+                      </button>
+                    </div>
+                  </div>
+                </div>,
+                document.body,
+              )
+            : null}
+        </main>
+
+        <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-px bg-linear-to-r from-cyan-400/40 via-zinc-800 to-fuchsia-400/40" />
+      </div>
+    </div>
+  )
+}

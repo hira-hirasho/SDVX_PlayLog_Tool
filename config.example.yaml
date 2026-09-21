@@ -1,0 +1,98 @@
+sdvx:
+  process_name: "sv6c.exe"
+
+input:
+  trigger_key: "F12"
+  debounce_seconds: 0.1
+
+obs:
+  executable_path: "C:/Program Files/obs-studio/bin/64bit/obs64.exe"
+  websocket:
+    host: "localhost"
+    port: 4455
+    timeout_seconds: 30
+  scene_name: "SDVX PlayLog Tool"
+
+result_detection:
+  template_path: "templates/result_screen.png"
+  threshold: 0.85
+  interval_seconds: 1.0
+  region:
+    x: 1666
+    y: 584
+    width: 116
+    height: 462
+
+song_start_detection:
+  template_path: "templates/song_start.png"
+  threshold: 0.85
+  interval_seconds: 1.0
+  scale: 0.25
+  region:
+    x: 572
+    y: 155
+    width: 150
+    height: 765
+
+replay:
+  detection_timeout_seconds: 30
+  stability_checks: 3
+  stability_interval_seconds: 1.0
+
+ocr:
+  max_attempts: 2
+
+  regions:
+    song_name:
+      x: 387
+      y: 995
+      width: 530
+      height: 32
+
+    artist:
+      x: 387
+      y: 1030
+      width: 530
+      height: 32
+
+    difficulty:
+      x: 51
+      y: 866
+      width: 86
+      height: 41
+
+    level:
+      x: 136
+      y: 866
+      width: 62
+      height: 41
+
+    score:
+      x: 427
+      y: 1065
+      width: 380
+      height: 60
+
+    score_delta:
+      x: 816
+      y: 1102
+      width: 141
+      height: 17
+
+    ex_score:
+      x: 529
+      y: 1142
+      width: 96
+      height: 25
+
+    ex_score_delta:
+      x: 897
+      y: 1154
+      width: 88
+      height: 17
+
+play_log:
+  min_score: 9000000
+
+excel:
+  workbook_path: ""
