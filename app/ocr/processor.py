@@ -46,13 +46,13 @@ class OCRProcessor:
         "NOV",
         "ADV",
         "EXH",
+        "MXM",
+        "ULT",
         "INF",
         "GRV",
         "HVN",
         "VVD",
         "XCD",
-        "MXM",
-        "ULT",
         "NBL",
     )
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import type { PlayLogRow } from '../types/playLog'
 
@@ -21,6 +21,7 @@ export function usePlayLogs({
 }: UsePlayLogsParams) {
   const [rows, setRows] = useState<PlayLogRow[]>([])
   const [total, setTotal] = useState(0)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -46,11 +47,16 @@ export function usePlayLogs({
     return () => {
       cancelled = true
     }
-  }, [page, startDate, endDate, songName, artist])
+  }, [page, startDate, endDate, songName, artist, reloadKey])
+
+  const refresh = useCallback(() => {
+    setReloadKey((current) => current + 1)
+  }, [])
 
   return {
     rows,
     total,
     pageSize: PAGE_SIZE,
+    refresh,
   }
 }

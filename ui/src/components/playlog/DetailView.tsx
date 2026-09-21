@@ -17,13 +17,15 @@ import {
 export function DetailView({
   row,
   onBack,
+  onUpdated,
 }: {
   row: PlayLogRow
   onBack: () => void
+  onUpdated: () => void
 }) {
   const grade = getGrade(row.score)
   const gradeColor = gradeColors[grade] ?? '#888'
-  const difficultyColor = difficultyColors[row.difficulty] ?? '#888'
+  const difficultyColor = difficultyColors[row.difficulty ?? ''] ?? '#888'
 
   const [media, setMedia] = useState<{
     resultImage: string | null
@@ -32,6 +34,10 @@ export function DetailView({
     resultImage: null,
     replayVideo: null,
   })
+
+  const [editedRow, setEditedRow] = useState(row)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false)
   const [imageZoom, setImageZoom] = useState(1)
@@ -82,6 +88,47 @@ export function DetailView({
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [isImagePreviewOpen])
+
+  const startEditing = () => {
+    setEditedRow(row)
+    setIsEditing(true)
+  }
+
+  const cancelEditing = () => {
+    setEditedRow(row)
+    setIsEditing(false)
+  }
+
+  const saveEditing = async () => {
+    setIsSaving(true)
+
+    try {
+      const result = await window.api.updatePlayLog(
+        row.play_id,
+        {
+          song_name: editedRow.song_name,
+          artist: editedRow.artist,
+          difficulty: editedRow.difficulty,
+          level: editedRow.level,
+          score: editedRow.score,
+          score_delta: editedRow.score_delta,
+          ex_score: editedRow.ex_score,
+          ex_score_delta: editedRow.ex_score_delta,
+        },
+      )
+
+      if (!result.updated) {
+        throw new Error('Play log was not found.')
+      }
+
+      setIsEditing(false)
+      onUpdated()
+    } catch (error) {
+      console.error('Failed to update play log:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div className="plg-page-in relative min-h-screen overflow-hidden bg-[#03050a] text-zinc-100">
@@ -226,20 +273,57 @@ export function DetailView({
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={onBack}
-                className="group relative overflow-hidden border border-zinc-800 bg-[#070a10] px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
-              >
-                <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
+              <div className="flex items-center gap-3">
+                {!isEditing ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={startEditing}
+                      className="group relative overflow-hidden border border-zinc-800 bg-[#070a10] px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-fuchsia-400/60 hover:text-fuchsia-300"
+                    >
+                      <span className="absolute left-0 top-0 h-px w-6 bg-fuchsia-400 transition-all group-hover:w-full" />
+                      <span className="flex items-center gap-3">
+                        <span className="text-lg">✎</span>
+                        EDIT
+                      </span>
+                    </button>
 
-                <span className="flex items-center gap-3">
-                  <span className="text-lg transition-transform group-hover:-translate-x-1">
-                    ←
-                  </span>
-                  HISTORY
-                </span>
-              </button>
+                    <button
+                      type="button"
+                      onClick={onBack}
+                      className="group relative overflow-hidden border border-zinc-800 bg-[#070a10] px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
+                    >
+                      <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
+                      <span className="flex items-center gap-3">
+                        <span className="text-lg transition-transform group-hover:-translate-x-1">
+                          ←
+                        </span>
+                        HISTORY
+                      </span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={saveEditing}
+                      disabled={isSaving}
+                      className="group relative overflow-hidden border border-cyan-400/60 bg-[#070a10] px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-cyan-300 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      SAVE
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={cancelEditing}
+                      disabled={isSaving}
+                      className="group relative overflow-hidden border border-zinc-800 bg-[#070a10] px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      CANCEL
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -272,21 +356,69 @@ export function DetailView({
                 </div>
 
                 <div className="mb-6 flex flex-wrap items-center gap-3">
-                  <span
-                    className="flex h-10 w-16 items-center justify-center border text-base font-black"
-                    style={{
-                      color: difficultyColor,
-                      borderColor: `${difficultyColor}99`,
-                      backgroundColor: `${difficultyColor}12`,
-                      boxShadow: `0 0 18px ${difficultyColor}18`,
-                    }}
-                  >
-                    {row.difficulty}
-                  </span>
+                  {isEditing ? (
+                    <>
+                      <select
+                        value={editedRow.difficulty ?? ''}
+                        onChange={(event) => {
+                          setEditedRow((current) => ({
+                            ...current,
+                            difficulty: event.target.value || null,
+                          }))
+                        }}
+                        className="h-10 w-24 border border-fuchsia-400/50 bg-[#070a10] px-3 font-mono text-sm font-bold uppercase text-zinc-100 outline-none focus:border-fuchsia-400"
+                      >
+                        <option value="">---</option>
+                        <option value="NOV">NOV</option>
+                        <option value="ADV">ADV</option>
+                        <option value="EXH">EXH</option>
+                        <option value="MXM">MXM</option>
+                        <option value="ULT">ULT</option>
+                        <option value="INF">INF</option>
+                        <option value="GRV">GRV</option>
+                        <option value="HVN">HVN</option>
+                        <option value="VVD">VVD</option>
+                        <option value="XCD">XCD</option>
+                        <option value="NBL">NBL</option>
+                      </select>
 
-                  <span className="font-mono text-xl font-black tracking-wide text-zinc-200">
-                    LEVEL {row.level}
-                  </span>
+                      <label className="flex items-center gap-2 font-mono text-xl font-black tracking-wide text-zinc-200">
+                        LEVEL
+                        <input
+                          type="number"
+                          value={editedRow.level ?? ''}
+                          onChange={(event) => {
+                            setEditedRow((current) => ({
+                              ...current,
+                              level:
+                                event.target.value === ''
+                                  ? null
+                                  : Number(event.target.value),
+                            }))
+                          }}
+                          className="h-10 w-20 border border-fuchsia-400/50 bg-[#070a10] px-3 font-mono text-xl font-black text-zinc-100 outline-none focus:border-fuchsia-400"
+                        />
+                      </label>
+                    </>
+                  ) : (
+                    <>
+                      <span
+                        className="flex h-10 w-16 items-center justify-center border text-base font-black"
+                        style={{
+                          color: difficultyColor,
+                          borderColor: `${difficultyColor}99`,
+                          backgroundColor: `${difficultyColor}12`,
+                          boxShadow: `0 0 18px ${difficultyColor}18`,
+                        }}
+                      >
+                        {row.difficulty}
+                      </span>
+
+                      <span className="font-mono text-xl font-black tracking-wide text-zinc-200">
+                        LEVEL {row.level}
+                      </span>
+                    </>
+                  )}
 
                   <span className="h-1 w-1 bg-zinc-700" />
 
@@ -295,19 +427,47 @@ export function DetailView({
                   </span>
                 </div>
 
-                <h1
-                  className="wrap-break-word font-mono text-4xl font-black uppercase leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl"
-                  title={row.song_name}
-                >
-                  {row.song_name}
-                </h1>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editedRow.song_name ?? ''}
+                    onChange={(event) => {
+                      setEditedRow((current) => ({
+                        ...current,
+                        song_name: event.target.value || null,
+                      }))
+                    }}
+                    className="w-full border border-fuchsia-400/50 bg-[#070a10] px-4 py-3 font-mono text-2xl font-black uppercase leading-tight text-white outline-none focus:border-fuchsia-400 sm:text-4xl lg:text-5xl"
+                  />
+                ) : (
+                  <h1
+                    className="min-h-[3.15rem] wrap-break-word font-mono text-4xl font-black uppercase leading-[1.05] tracking-tight text-white sm:min-h-[3.7rem] sm:text-5xl lg:min-h-16 lg:text-6xl"
+                    title={row.song_name ?? ''}
+                  >
+                    {row.song_name ?? '\u00A0'}
+                  </h1>
+                )}
 
-                <p
-                  className="mt-4 wrap-break-word font-mono text-lg font-semibold text-zinc-500 sm:text-xl"
-                  title={row.artist}
-                >
-                  {row.artist}
-                </p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editedRow.artist ?? ''}
+                    onChange={(event) => {
+                      setEditedRow((current) => ({
+                        ...current,
+                        artist: event.target.value || null,
+                      }))
+                    }}
+                    className="mt-4 w-full border border-fuchsia-400/50 bg-[#070a10] px-4 py-3 font-mono text-lg font-semibold text-zinc-100 outline-none focus:border-fuchsia-400 sm:text-xl"
+                  />
+                ) : (
+                  <p
+                    className="mt-4 min-h-7 wrap-break-word font-mono text-lg font-semibold text-zinc-500 sm:min-h-8 sm:text-xl"
+                    title={row.artist ?? ''}
+                  >
+                    {row.artist ?? '\u00A0'}
+                  </p>
+                )}
 
                 <div className="mt-8 h-px w-full bg-linear-to-r from-cyan-400/50 via-zinc-800 to-transparent" />
 
@@ -317,15 +477,52 @@ export function DetailView({
                       SCORE
                     </div>
 
-                    <div className="mt-2 font-mono text-4xl font-black tabular-nums text-white sm:text-5xl">
-                      {formatScore(row.score)}
-                    </div>
+                    {isEditing ? (
+                      <>
+                        <input
+                          type="number"
+                          value={editedRow.score ?? ''}
+                          onChange={(event) => {
+                            setEditedRow((current) => ({
+                              ...current,
+                              score:
+                                event.target.value === ''
+                                  ? null
+                                  : Number(event.target.value),
+                            }))
+                          }}
+                          className="mt-2 w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-3xl font-black tabular-nums text-white outline-none focus:border-fuchsia-400 sm:text-4xl"
+                        />
 
-                    <div
-                      className={`mt-2 font-mono text-lg font-black tabular-nums ${getDeltaClass(row.score_delta)}`}
-                    >
-                      {formatDelta(row.score_delta)}
-                    </div>
+                        <input
+                          type="number"
+                          value={editedRow.score_delta ?? ''}
+                          onChange={(event) => {
+                            setEditedRow((current) => ({
+                              ...current,
+                              score_delta:
+                                event.target.value === ''
+                                  ? null
+                                  : Number(event.target.value),
+                            }))
+                          }}
+                          placeholder="SCORE Δ"
+                          className="mt-2 w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-lg font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="mt-2 flex min-h-12 items-center font-mono text-4xl font-black tabular-nums text-white sm:min-h-14 sm:text-5xl">
+                          {formatScore(row.score) || '\u00A0'}
+                        </div>
+
+                        <div
+                          className={`mt-2 min-h-7 font-mono text-lg font-black tabular-nums ${getDeltaClass(row.score_delta)}`}
+                        >
+                          {formatDelta(row.score_delta) || '\u00A0'}
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div>
@@ -333,15 +530,52 @@ export function DetailView({
                       EX SCORE
                     </div>
 
-                    <div className="mt-2 font-mono text-3xl font-black tabular-nums text-zinc-200 sm:text-4xl">
-                      {formatScore(row.ex_score)}
-                    </div>
+                    {isEditing ? (
+                      <>
+                        <input
+                          type="number"
+                          value={editedRow.ex_score ?? ''}
+                          onChange={(event) => {
+                            setEditedRow((current) => ({
+                              ...current,
+                              ex_score:
+                                event.target.value === ''
+                                  ? null
+                                  : Number(event.target.value),
+                            }))
+                          }}
+                          className="mt-2 w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-3xl font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400 sm:text-4xl"
+                        />
 
-                    <div
-                      className={`mt-2 font-mono text-lg font-black tabular-nums ${getDeltaClass(row.ex_score_delta)}`}
-                    >
-                      {formatDelta(row.ex_score_delta)}
-                    </div>
+                        <input
+                          type="number"
+                          value={editedRow.ex_score_delta ?? ''}
+                          onChange={(event) => {
+                            setEditedRow((current) => ({
+                              ...current,
+                              ex_score_delta:
+                                event.target.value === ''
+                                  ? null
+                                  : Number(event.target.value),
+                            }))
+                          }}
+                          placeholder="EX SCORE Δ"
+                          className="mt-2 w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-lg font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="mt-2 flex min-h-12 items-center font-mono text-3xl font-black tabular-nums text-zinc-200 sm:min-h-14 sm:text-4xl">
+                          {formatScore(row.ex_score) || '\u00A0'}
+                        </div>
+
+                        <div
+                          className={`mt-2 min-h-7 font-mono text-lg font-black tabular-nums ${getDeltaClass(row.ex_score_delta)}`}
+                        >
+                          {formatDelta(row.ex_score_delta) || '\u00A0'}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -379,7 +613,7 @@ export function DetailView({
                     />
 
                     <span className="relative font-mono text-7xl font-black italic drop-shadow-[0_0_16px_currentColor]">
-                      {grade}
+                      {grade || '-'}
                     </span>
 
                     <span

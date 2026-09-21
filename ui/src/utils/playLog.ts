@@ -2,13 +2,13 @@ export const difficultyColors: Record<string, string> = {
   NOV: '#008CFF',
   ADV: '#FFD700',
   EXH: '#FF3030',
-  INF: '#FF1493',
   MXM: '#D8D8D8',
+  ULT: '#FFFF42',
+  INF: '#FF1493',
   GRV: '#FFA500',
   HVN: '#00BFFF',
   VVD: '#FA2878',
   XCD: '#3144FF',
-  ULT: '#FFFF42',
   NBL: '#B060FF',
 }
 
@@ -25,7 +25,8 @@ export const gradeColors: Record<string, string> = {
   S: '#FFE98A',
 }
 
-export function getGrade(score: number): string {
+export function getGrade(score: number | null): string {
+  if (score === null) return '-'
   if (score >= 9_900_000) return 'S'
   if (score >= 9_800_000) return 'AAA+'
   if (score >= 9_700_000) return 'AAA'
@@ -38,11 +39,13 @@ export function getGrade(score: number): string {
   return 'D'
 }
 
-export function formatScore(value: number): string {
+export function formatScore(value: number | null): string {
+  if (value === null) return ''
   return value.toLocaleString('ja-JP')
 }
 
-export function formatDelta(value: number): string {
+export function formatDelta(value: number | null): string {
+  if (value === null) return ''
   if (value > 0) return `+${value.toLocaleString('ja-JP')}`
   return value.toLocaleString('ja-JP')
 }
@@ -61,7 +64,8 @@ export function formatDate(value: string): string {
   })
 }
 
-export function getDeltaClass(value: number): string {
+export function getDeltaClass(value: number | null): string {
+  if (value === null) return 'text-zinc-500'
   if (value > 0) return 'text-emerald-400'
   if (value < 0) return 'text-rose-400'
   return 'text-zinc-500'

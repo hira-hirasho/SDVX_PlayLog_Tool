@@ -9,9 +9,7 @@ const dbPath = path.join(
 )
 
 export function getDatabase() {
-  return new Database(dbPath, {
-    readonly: true,
-  })
+  return new Database(dbPath)
 }
 
 export function getPlayLogs({
@@ -90,5 +88,55 @@ export function getPlayLogs({
   return {
     rows,
     total: total.count,
+  }
+}
+
+export function updatePlayLog(
+  playId,
+  {
+    song_name,
+    artist,
+    difficulty,
+    level,
+    score,
+    score_delta,
+    ex_score,
+    ex_score_delta,
+  },
+) {
+  const db = getDatabase()
+
+  try {
+    const result = db
+      .prepare(`
+        UPDATE play_log
+        SET
+          song_name = @song_name,
+          artist = @artist,
+          difficulty = @difficulty,
+          level = @level,
+          score = @score,
+          score_delta = @score_delta,
+          ex_score = @ex_score,
+          ex_score_delta = @ex_score_delta
+        WHERE play_id = @play_id
+      `)
+      .run({
+        play_id: playId,
+        song_name,
+        artist,
+        difficulty,
+        level,
+        score,
+        score_delta,
+        ex_score,
+        ex_score_delta,
+      })
+
+    return {
+      updated: result.changes > 0,
+    }
+  } finally {
+    db.close()
   }
 }

@@ -13,14 +13,14 @@ class PlayRecord:
 
     play_id: str
     played_at: datetime
-    song_name: str
-    artist: str
-    difficulty: str
-    level: int
-    score: int
-    score_delta: int
-    ex_score: int
-    ex_score_delta: int
+    song_name: str | None
+    artist: str | None
+    difficulty: str | None
+    level: int | None
+    score: int | None
+    score_delta: int | None
+    ex_score: int | None
+    ex_score_delta: int | None
 
     @classmethod
     def from_ocr(

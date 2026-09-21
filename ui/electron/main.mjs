@@ -13,7 +13,10 @@ import { Readable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
 
 import { getDataRoot } from './paths.mjs'
-import { getPlayLogs } from './db.mjs'
+import {
+  getPlayLogs,
+  updatePlayLog,
+} from './db.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -106,6 +109,10 @@ if (!gotTheLock) {
 
   ipcMain.handle('play-log:get-list', (_event, options) => {
     return getPlayLogs(options)
+  })
+
+  ipcMain.handle('play-log:update', (_event, playId, values) => {
+      return updatePlayLog(playId, values)
   })
 
   ipcMain.handle('play-log:get-media', (_event, playId) => {

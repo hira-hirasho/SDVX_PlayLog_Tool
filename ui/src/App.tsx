@@ -38,7 +38,7 @@ export default function App() {
 
   const { page, setPage } = usePagination()
 
-  const { rows, total, pageSize } = usePlayLogs({
+  const { rows, total, pageSize, refresh } = usePlayLogs({
     page,
     startDate,
     endDate,
@@ -55,7 +55,13 @@ export default function App() {
 
 
   if (selectedId && selectedRow) {
-    return <DetailView row={selectedRow} onBack={goBack} />
+    return (
+      <DetailView
+        row={selectedRow}
+        onBack={goBack}
+        onUpdated={refresh}
+      />
+    )
   }
 
   // Re-keying the list block replays its entrance once per query change, so
@@ -297,7 +303,7 @@ export default function App() {
 
               <span className="h-px w-8 bg-zinc-800" />
 
-              <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-600">
+              <span className="font-mono text-[11px] font-semibold uppercase leading-none tracking-[0.16em] text-zinc-600">
                 PAGE {String(page + 1).padStart(2, '0')}
               </span>
             </div>

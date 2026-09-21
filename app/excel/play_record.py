@@ -30,8 +30,8 @@ class PlayRecordService:
     ) -> bool:
         """自動記録条件を満たすか判定する。"""
         return (
-            ocr_result.score is not None
-            and ocr_result.score >= self._min_score
+            ocr_result.score is None
+            or ocr_result.score >= self._min_score
         )
 
     def create_record(

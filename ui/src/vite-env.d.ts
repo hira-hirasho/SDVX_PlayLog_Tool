@@ -3,14 +3,14 @@
 interface PlayLogRow {
   play_id: string
   played_at: string
-  song_name: string
-  artist: string
-  difficulty: string
-  level: number
-  score: number
-  score_delta: number
-  ex_score: number
-  ex_score_delta: number
+  song_name: string | null
+  artist: string | null
+  difficulty: string | null
+  level: number | null
+  score: number | null
+  score_delta: number | null
+  ex_score: number | null
+  ex_score_delta: number | null
 }
 
 interface PlayLogListResult {
@@ -32,6 +32,22 @@ interface Window {
     getPlayMedia: (playId: string) => Promise<{
       resultImage: string | null
       replayVideo: string | null
+    }>
+
+    updatePlayLog: (
+      playId: string,
+      values: {
+        song_name: string | null
+        artist: string | null
+        difficulty: string | null
+        level: number | null
+        score: number | null
+        score_delta: number | null
+        ex_score: number | null
+        ex_score_delta: number | null
+      },
+    ) => Promise<{
+      updated: boolean
     }>
   }
 }

@@ -21,7 +21,7 @@ export function ScoreCard({
 }) {
   const grade = getGrade(row.score)
   const gradeColor = gradeColors[grade] ?? '#888'
-  const difficultyColor = difficultyColors[row.difficulty] ?? '#888'
+  const difficultyColor = difficultyColors[row.difficulty ?? ''] ?? '#888'
 
   return (
     <button
@@ -50,7 +50,7 @@ export function ScoreCard({
             'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
         }}
       >
-        {grade}
+        {grade || '-'}
       </div>
 
       <div className="min-w-0">
@@ -59,17 +59,17 @@ export function ScoreCard({
         </div>
 
         <div
-          className="truncate text-sm font-semibold text-zinc-100"
-          title={row.song_name}
+          className="min-h-5 truncate text-sm font-semibold text-zinc-100"
+          title={row.song_name ?? ''}
         >
-          {row.song_name}
+          {row.song_name ?? '\u00A0'}
         </div>
 
         <div
-          className="truncate text-xs text-zinc-500"
-          title={row.artist}
+          className="min-h-5 truncate text-xs text-zinc-500"
+          title={row.artist ?? ''}
         >
-          {row.artist}
+          {row.artist ?? '\u00A0'}
         </div>
       </div>
 
@@ -84,11 +84,11 @@ export function ScoreCard({
               'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
           }}
         >
-          {row.difficulty}
+          {row.difficulty ?? '\u00A0'}
         </span>
 
         <span className="flex h-6 w-8 shrink-0 items-center justify-center font-mono text-sm font-semibold tabular-nums text-zinc-300">
-          {row.level}
+          {row.level ?? '\u00A0'}
         </span>
       </div>
 
@@ -96,9 +96,8 @@ export function ScoreCard({
         <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-700">
           SCORE
         </div>
-
-        <div className="font-mono text-base font-bold tabular-nums text-zinc-100">
-          {formatScore(row.score)}
+        <div className="min-h-5 font-mono text-sm font-bold tabular-nums text-zinc-100">
+          {formatScore(row.score) || '\u00A0'}
         </div>
       </div>
 
@@ -108,9 +107,9 @@ export function ScoreCard({
         </div>
 
         <div
-          className={`font-mono text-sm font-semibold tabular-nums ${getDeltaClass(row.score_delta)}`}
+          className={`min-h-5 font-mono text-sm font-semibold tabular-nums ${getDeltaClass(row.score_delta)}`}
         >
-          {formatDelta(row.score_delta)}
+          {formatDelta(row.score_delta) || '\u00A0'}
         </div>
       </div>
 
@@ -119,8 +118,8 @@ export function ScoreCard({
           EX SCORE
         </div>
 
-        <div className="font-mono text-sm font-semibold tabular-nums text-zinc-300">
-          {formatScore(row.ex_score)}
+        <div className="min-h-5 font-mono text-sm font-semibold tabular-nums text-zinc-300">
+          {formatScore(row.ex_score) || '\u00A0'}
         </div>
       </div>
 
@@ -130,9 +129,9 @@ export function ScoreCard({
         </div>
 
         <div
-          className={`font-mono text-sm font-semibold tabular-nums ${getDeltaClass(row.ex_score_delta)}`}
+          className={`min-h-5 font-mono text-sm font-semibold tabular-nums ${getDeltaClass(row.ex_score_delta)}`}
         >
-          {formatDelta(row.ex_score_delta)}
+          {formatDelta(row.ex_score_delta) || '\u00A0'}
         </div>
       </div>
 

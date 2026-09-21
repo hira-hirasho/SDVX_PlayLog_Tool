@@ -59,14 +59,14 @@ class PlayLogDatabase:
                 CREATE TABLE IF NOT EXISTS play_log (
                     play_id TEXT PRIMARY KEY,
                     played_at TEXT NOT NULL,
-                    song_name TEXT NOT NULL,
-                    artist TEXT NOT NULL,
-                    difficulty TEXT NOT NULL,
-                    level INTEGER NOT NULL,
-                    score INTEGER NOT NULL,
-                    score_delta INTEGER NOT NULL,
-                    ex_score INTEGER NOT NULL,
-                    ex_score_delta INTEGER NOT NULL
+                    song_name TEXT,
+                    artist TEXT,
+                    difficulty TEXT,
+                    level INTEGER,
+                    score INTEGER,
+                    score_delta INTEGER,
+                    ex_score INTEGER,
+                    ex_score_delta INTEGER
                 )
                 """
             )

@@ -3,8 +3,6 @@
 ## 1. 文書情報
 
 * 文書名：SDVX PlayLog Tool 内部仕様書
-* バージョン：1.0
-* 最終更新：2026-09-21
 * 対象OS：Windows 11
 * 対象ゲーム：SOUND VOLTEX（コナステ版）
 * 対象ゲームプロセス：`sv6c.exe`
@@ -868,6 +866,10 @@ ex_score_delta
 ```
 
 `played_at`にはResultStateの`detected_at`を使用する。
+
+OCRで取得する項目（`song_name`、`artist`、`difficulty`、`level`、`score`、`score_delta`、`ex_score`、`ex_score_delta`）はNULLを許容する。
+
+OCR結果が取得できなかった項目はNULLとして保存する。
 
 ---
 
@@ -1903,7 +1905,3 @@ SDVX PlayLog Tool UI仕様書
 本仕様書では、Backend内部の責務分離、データフロー、コンポーネント間の契約、内部固定値および処理ライフサイクルを定義する。
 
 今後リファクタリングを行う場合は、外部仕様として維持すべき動作と内部実装上の変更可能な詳細を分離し、外部動作を維持する範囲では内部構造を変更できるものとする。
-
----
-
-以上を、2026-09-21時点における「SDVX PlayLog Tool 内部仕様書」の基準とする。

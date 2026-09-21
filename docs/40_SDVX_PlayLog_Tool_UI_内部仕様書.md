@@ -3,8 +3,6 @@
 ## 1. 文書情報
 
 - 文書名：SDVX PlayLog Tool UI内部仕様書
-- バージョン：1.0
-- 最終更新：2026-09-21
 - 対象OS：Windows 11
 - 対象アプリ：SDVX PlayLog Tool
 - UI実装：React / TypeScript
@@ -325,6 +323,9 @@ src/components/playlog/DetailView.tsx
 
 ```text
 1プレイの詳細表示
+プレイ情報編集
+プレイ情報保存
+プレイ情報編集キャンセル
 パフォーマンス表示
 GRADE表示
 メディア表示
@@ -334,8 +335,15 @@ REPLAY VIDEO表示
 
 DetailViewは対象`play_id`に対応するプレイデータを受け取り、その内容を表示する。
 
-メディア表示では、Main Processから取得したメディアURLを使用する。
+編集状態では、表示中のプレイデータとは別に編集用の状態を保持する。
 
+`SAVE`実行時はPreloadで公開された更新APIを介してMain Processへプレイデータの更新を要求する。
+
+`CANCEL`実行時は編集内容を破棄し、保存前のプレイデータを表示する。
+
+保存成功後は一覧データを再取得し、更新後のプレイデータを反映する。
+
+メディア表示では、Main Processから取得したメディアURLを使用する。
 ---
 
 ## 9.3 PlayLogFilters
@@ -537,6 +545,23 @@ ex_score
 ex_score_delta
 ```
 
+OCRで取得する項目はNULLになり得る。
+
+TypeScriptでは以下の項目をnullableとして扱う。
+
+```text
+song_name: string | null
+artist: string | null
+difficulty: string | null
+level: number | null
+score: number | null
+score_delta: number | null
+ex_score: number | null
+ex_score_delta: number | null
+```
+
+`play_id`および`played_at`はnullableとしない。
+
 Renderer内部ではこれらの型を基準としてプレイデータを扱う。
 
 ---
@@ -566,9 +591,15 @@ GRADE算出
 
 # 13. SQLiteアクセス
 
-SQLiteアクセスはElectron Main Processで実行する。
+SQLiteはUIにおけるプレイ履歴の読み取り元とする。
 
-Rendererから直接better-sqlite3を使用しない。
+UIではプレイレコードの生成・削除は行わない。
+
+プレイ詳細画面から既存のプレイレコードを更新できる。
+
+更新対象は既存の`play_id`に対応するプレイレコードとし、`play_id`自体および`played_at`は変更しない。
+
+更新処理はRendererからPreloadで公開されたAPIを介してMain Processへ要求し、Main Processの`better-sqlite3`によってSQLiteへ反映する。
 
 ```text
 Renderer
@@ -652,6 +683,7 @@ IPCはUI内部のElectron Main / Renderer間通信であり、Pythonバックエ
 
 ```text
 プレイ履歴取得
+プレイレコード更新
 メディア情報取得
 ```
 
@@ -704,6 +736,49 @@ Renderer
 ```
 
 メディアファイルそのものをBase64文字列としてIPCで転送しない。
+
+---
+
+## 16.3 play-log:update
+
+指定された`play_id`の既存プレイレコードを更新するためのIPCとする。
+
+概念：
+
+```text
+Renderer
+↓
+play-log:update
+↓
+Main Process
+↓
+SQLite UPDATE
+↓
+結果
+↓
+Renderer
+```
+
+更新対象：
+
+```text
+song_name
+artist
+difficulty
+level
+score
+score_delta
+ex_score
+ex_score_delta
+```
+
+`play_id`を更新対象の識別子として使用する。
+
+`played_at`および`play_id`は更新しない。
+
+更新対象の値にはNULLを指定できる。
+
+更新結果として、対象レコードが存在して更新されたかをRendererへ返す。
 
 ---
 
@@ -1511,6 +1586,7 @@ UI内部仕様は、UI外部仕様で定義された機能を実現するため�
 | 検索 | `usePlayLogFilters` / `PlayLogFilters` |
 | ページング | `usePagination` |
 | 詳細画面 | `usePlayLogNavigation` / `DetailView` |
+| プレイ詳細編集・保存 | `DetailView` / `window.api` / `play-log:update` / `db.mjs` |
 | GRADE | `utils/playLog.ts` |
 | RESULT IMAGE | `DetailView` / `sdvx-media://` |
 | REPLAY VIDEO | `DetailView` / `sdvx-media://` |
@@ -1659,8 +1735,8 @@ UIはPythonバックエンドと直接通信しない。
 
 プレイ履歴はSQLiteから取得する。
 
+既存のプレイレコードは、Preloadで公開された更新APIを介してMain ProcessからSQLiteへ更新できる。
+
 メディアは`play_id`を基準として取得する。
 
 大容量メディアはIPCの巨大文字列転送を行わず、`sdvx-media://`によるストリーミングを使用する。
-
-以上を、現時点における「SDVX PlayLog Tool UI内部仕様書 v1.0」の基準とする。
