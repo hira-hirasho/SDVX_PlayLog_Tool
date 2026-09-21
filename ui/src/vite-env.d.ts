@@ -34,6 +34,14 @@ interface Window {
       replayVideo: string | null
     }>
 
+    trashPlayMedia: (
+      playId: string,
+      mediaType: 'result' | 'replay',
+    ) => Promise<{
+      trashed: boolean
+      reason?: string
+    }>
+
     updatePlayLog: (
       playId: string,
       values: {

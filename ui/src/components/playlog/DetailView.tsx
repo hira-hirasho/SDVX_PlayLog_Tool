@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useRef, useState } from 'react'
+import { Trash2 } from 'lucide-react'
 
 import type { PlayLogRow } from '../../types/playLog'
 import { FxStyles } from '../effects/FxStyles'
@@ -44,8 +45,15 @@ export function DetailView({
   const [imageOffset, setImageOffset] = useState({ x: 0, y: 0 })
   const [isDraggingImage, setIsDraggingImage] = useState(false)
 
+  type MediaType = 'result' | 'replay'
+
+  const [deleteTarget, setDeleteTarget] = useState<MediaType | null>(null)
+  const [isDeletingMedia, setIsDeletingMedia] = useState(false)
+  const [mediaDeleteError, setMediaDeleteError] = useState<string | null>(null)
+
   const dragStartRef = useRef({ x: 0, y: 0 })
   const offsetStartRef = useRef({ x: 0, y: 0 })
+  const videoRef = useRef<HTMLVideoElement | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -127,6 +135,68 @@ export function DetailView({
       console.error('Failed to update play log:', error)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const requestDeleteMedia = (mediaType: MediaType) => {
+    setMediaDeleteError(null)
+    setDeleteTarget(mediaType)
+  }
+  
+  const handleDeleteMedia = async () => {
+    if (!deleteTarget || isDeletingMedia) {
+      return
+    }
+  
+    const mediaType = deleteTarget
+
+    if (mediaType === 'replay') {
+      videoRef.current?.pause()
+    }
+  
+    setIsDeletingMedia(true)
+    setMediaDeleteError(null)
+  
+    try {
+      const result = await window.api.trashPlayMedia(
+        row.play_id,
+        mediaType,
+      )
+  
+      if (!result.trashed) {
+        if (result.reason === 'not_found') {
+          setMedia((current) => ({
+            ...current,
+            ...(mediaType === 'result'
+              ? { resultImage: null }
+              : { replayVideo: null }),
+          }))
+          setDeleteTarget(null)
+          return
+        }
+  
+        throw new Error(result.reason ?? 'trash_failed')
+      }
+  
+      setMedia((current) => ({
+        ...current,
+        ...(mediaType === 'result'
+          ? { resultImage: null }
+          : { replayVideo: null }),
+      }))
+  
+      if (mediaType === 'result') {
+        setIsImagePreviewOpen(false)
+      }
+  
+      setDeleteTarget(null)
+    } catch (error) {
+      console.error('Failed to move media to trash:', error)
+      setMediaDeleteError(
+        'メディアをゴミ箱へ移動できませんでした。',
+      )
+    } finally {
+      setIsDeletingMedia(false)
     }
   }
 
@@ -657,6 +727,18 @@ export function DetailView({
                         RESULT IMAGE
                       </span>
                     </div>
+
+                    {media.resultImage && (
+                      <button
+                        type="button"
+                        aria-label="Move result image to trash"
+                        title="Move to Recycle Bin"
+                        onClick={() => requestDeleteMedia('result')}
+                        className="flex h-8 w-8 items-center justify-center border border-zinc-800 text-zinc-500 transition-colors hover:border-cyan-400/60 hover:text-cyan-300"
+                      >
+                        <Trash2 size={16} strokeWidth={1.8} />
+                      </button>
+                    )}
                   </div>
 
                   <div className="relative overflow-hidden bg-[#03050a] p-4 aspect-5/7">
@@ -702,6 +784,16 @@ export function DetailView({
                         REPLAY VIDEO
                       </span>
                     </div>
+
+                    <button
+                      type="button"
+                      aria-label="Move replay video to trash"
+                      title="Move to Recycle Bin"
+                      onClick={() => requestDeleteMedia('replay')}
+                      className="flex h-8 w-8 items-center justify-center border border-zinc-800 text-zinc-500 transition-colors hover:border-fuchsia-400/60 hover:text-fuchsia-300"
+                    >
+                      <Trash2 size={16} strokeWidth={1.8} />
+                    </button>
                   </div>
 
                   <div className="relative overflow-hidden bg-[#03050a] p-4 aspect-5/7">
@@ -709,6 +801,7 @@ export function DetailView({
 
                     <div className="relative flex h-full items-center justify-center border border-zinc-800 bg-[#05070c]">
                       <video
+                        ref={videoRef}
                         src={media.replayVideo}
                         controls
                         playsInline
@@ -950,6 +1043,77 @@ export function DetailView({
                 document.body,
               )
             : null}
+            {deleteTarget &&
+              createPortal(
+                <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/75 px-6 backdrop-blur-sm">
+                  <div className="w-full max-w-md border border-zinc-700 bg-[#070a10] shadow-2xl">
+                    <div className="flex items-center gap-3 border-b border-zinc-800 px-6 py-4">
+                      <Trash2
+                        size={18}
+                        className={
+                          deleteTarget === 'result'
+                            ? 'text-cyan-300'
+                            : 'text-fuchsia-300'
+                        }
+                      />
+
+                      <span className="font-mono text-sm tracking-[0.18em] text-zinc-200">
+                        MOVE TO TRASH
+                      </span>
+                    </div>
+
+                    <div className="px-6 py-6">
+                      <p className="font-mono text-sm text-zinc-200">
+                        {deleteTarget === 'result'
+                          ? 'RESULT IMAGE'
+                          : 'REPLAY VIDEO'}
+                      </p>
+
+                      <p className="mt-3 text-sm leading-6 text-zinc-400">
+                        このメディアをWindowsのゴミ箱へ移動しますか？
+                      </p>
+
+                      <p className="mt-2 text-xs leading-5 text-zinc-600">
+                        プレイ記録自体は削除されません。
+                      </p>
+
+                      {mediaDeleteError && (
+                        <p className="mt-4 border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-300">
+                          {mediaDeleteError}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end gap-3 border-t border-zinc-800 px-6 py-4">
+                      <button
+                        type="button"
+                        disabled={isDeletingMedia}
+                        onClick={() => {
+                          setDeleteTarget(null)
+                          setMediaDeleteError(null)
+                        }}
+                        className="border border-zinc-800 px-4 py-2 font-mono text-xs tracking-[0.12em] text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        CANCEL
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isDeletingMedia}
+                        onClick={handleDeleteMedia}
+                        className={
+                          deleteTarget === 'result'
+                            ? 'border border-cyan-400/50 bg-cyan-400/5 px-4 py-2 font-mono text-xs tracking-[0.12em] text-cyan-300 transition-colors hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-40'
+                            : 'border border-fuchsia-400/50 bg-fuchsia-400/5 px-4 py-2 font-mono text-xs tracking-[0.12em] text-fuchsia-300 transition-colors hover:bg-fuchsia-400/10 disabled:cursor-not-allowed disabled:opacity-40'
+                        }
+                      >
+                        {isDeletingMedia ? 'MOVING...' : 'MOVE TO TRASH'}
+                      </button>
+                    </div>
+                  </div>
+                </div>,
+                document.body,
+              )}
         </main>
 
         <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-px bg-linear-to-r from-cyan-400/40 via-zinc-800 to-fuchsia-400/40" />

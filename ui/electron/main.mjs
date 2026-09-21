@@ -5,6 +5,7 @@ import {
   Menu,
   net,
   protocol,
+  shell,
 } from 'electron'
 
 import fs from 'node:fs'
@@ -155,6 +156,86 @@ if (!gotTheLock) {
       replayVideo,
     }
   })
+
+  ipcMain.handle(
+    'play-log:trash-media',
+    async (_event, playId, mediaType) => {
+      if (
+        typeof playId !== 'string' ||
+        !/^[0-9a-f-]+$/i.test(playId)
+      ) {
+        return {
+          trashed: false,
+          reason: 'invalid_play_id',
+        }
+      }
+
+      if (mediaType !== 'result' && mediaType !== 'replay') {
+        return {
+          trashed: false,
+          reason: 'invalid_media_type',
+        }
+      }
+
+      const mediaDir = path.join(
+        getDataRoot(),
+        'media',
+        playId,
+      )
+
+      const filename = mediaType === 'result'
+        ? 'result.png'
+        : 'replay.mp4'
+
+      const mediaPath = path.join(
+        mediaDir,
+        filename,
+      )
+
+      if (!fs.existsSync(mediaPath)) {
+        return {
+          trashed: false,
+          reason: 'not_found',
+        }
+      }
+
+      try {
+        await shell.trashItem(mediaPath)
+
+        const resultPath = path.join(
+          mediaDir,
+          'result.png',
+        )
+
+        const replayPath = path.join(
+          mediaDir,
+          'replay.mp4',
+        )
+
+        if (
+          !fs.existsSync(resultPath) &&
+          !fs.existsSync(replayPath) &&
+          fs.existsSync(mediaDir)
+        ) {
+          await shell.trashItem(mediaDir)
+        }
+
+        return {
+          trashed: true,
+        }
+      } catch (error) {
+        console.error(
+          `Failed to move media to trash: ${mediaPath}`,
+          error,
+        )
+
+        return {
+          trashed: false,
+          reason: 'trash_failed',
+        }
+      }
+    },
+  )
 
   app.whenReady().then(() => {
     protocol.handle('sdvx-media', async (request) => {

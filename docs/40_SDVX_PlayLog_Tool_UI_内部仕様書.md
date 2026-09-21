@@ -218,6 +218,39 @@ child_process
 Electron Main API
 ```
 
+## 6.1 Rendererへ公開するAPI
+
+Preloadでは`window.api`として必要なAPIのみをRendererへ公開する。
+
+現行API：
+
+```text
+getPlayLogs()
+getPlayMedia()
+updatePlayLog()
+trashPlayMedia()
+```
+
+対応するIPC：
+
+```text
+getPlayLogs
+→ play-log:get-list
+
+getPlayMedia
+→ play-log:get-media
+
+updatePlayLog
+→ play-log:update
+
+trashPlayMedia
+→ play-log:trash-media
+```
+
+Rendererは`ipcRenderer`を直接利用しない。
+
+Rendererは`window.api`を介してMain Processの処理を利用する。
+
 ---
 
 # 7. Rendererアーキテクチャ
@@ -593,13 +626,13 @@ GRADE算出
 
 SQLiteはUIにおけるプレイ履歴の読み取り元とする。
 
-UIではプレイレコードの生成・削除は行わない。
+UIはプレイレコードの新規生成および削除を行わない。
 
-プレイ詳細画面から既存のプレイレコードを更新できる。
+プレイ詳細画面から、既存のプレイレコードを更新できる。
 
 更新対象は既存の`play_id`に対応するプレイレコードとし、`play_id`自体および`played_at`は変更しない。
 
-更新処理はRendererからPreloadで公開されたAPIを介してMain Processへ要求し、Main Processの`better-sqlite3`によってSQLiteへ反映する。
+更新処理はRendererからPreloadで公開された更新APIを介してMain Processへ要求し、Main Processの`better-sqlite3`によってSQLiteへ反映する。
 
 ```text
 Renderer
@@ -615,9 +648,25 @@ better-sqlite3
 playlog.db
 ```
 
-SQLiteはUIにおけるプレイ履歴の読み取り元とする。
+UIによるSQLite操作の範囲：
 
-UIはプレイレコードの生成・更新・削除を行わない。
+```text
+SELECT
+→ プレイ履歴の取得
+
+UPDATE
+→ 既存プレイレコードの編集保存
+
+INSERT
+→ UIからは実行しない
+
+DELETE
+→ UIからは実行しない
+```
+
+メディア削除はSQLite上のプレイレコード削除とは別の処理として扱う。
+
+メディアを削除しても、対応するSQLite上のプレイレコードは削除しない。
 
 ---
 
@@ -782,6 +831,70 @@ ex_score_delta
 
 ---
 
+## 16.4 play-log:trash-media
+
+指定された`play_id`のメディアをWindowsのゴミ箱へ移動するためのIPCとする。
+
+概念：
+
+```text
+Renderer
+↓
+play-log:trash-media
+↓
+Main Process
+↓
+メディアパス検証
+↓
+shell.trashItem()
+↓
+Windowsのゴミ箱
+```
+
+Rendererから渡すメディア種別は以下に限定する。
+
+```text
+result
+replay
+```
+
+Main Processではメディア種別を実ファイル名へ変換する。
+
+```text
+result
+↓
+result.png
+
+replay
+↓
+replay.mp4
+```
+
+Rendererから任意のファイルパスを受け取って削除する方式は使用しない。
+
+対象ファイルが存在しない場合は、削除済み状態として扱える結果をRendererへ返す。
+
+削除成功時は以下を返す。
+
+```text
+{
+  trashed: true
+}
+```
+
+失敗時は削除されなかったことを示す結果を返す。
+
+```text
+{
+  trashed: false,
+  reason: ...
+}
+```
+
+IPC経由でメディアファイル本体をRendererへ転送しない。
+
+---
+
 # 17. メディアアクセス
 
 メディアは以下に保存される。
@@ -808,6 +921,159 @@ data/media/<play_id>/
 ├─ result.png
 └─ replay.mp4
 ```
+
+---
+
+## 17.1 メディア取得
+
+メディア取得はMain Processで実行する。
+
+Rendererから`play_id`を受け取り、Main Processで対象メディアファイルの存在を確認する。
+
+```text
+Renderer
+↓
+play-log:get-media
+↓
+Main Process
+↓
+play_idからメディアパスを導出
+↓
+ファイル存在確認
+↓
+メディアURL生成
+↓
+Renderer
+```
+
+存在するメディアについてのみ、`sdvx-media://` URLを生成する。
+
+存在しないメディアは`null`としてRendererへ返す。
+
+```text
+{
+  resultImage: string | null,
+  replayVideo: string | null
+}
+```
+
+メディアファイルそのものをBase64文字列等へ変換してIPCで転送しない。
+
+---
+
+## 17.2 メディア削除
+
+メディア削除はMain Processで実行する。
+
+Rendererからは以下の情報を受け取る。
+
+```text
+play_id
+mediaType
+```
+
+`mediaType`は以下の値に限定する。
+
+```text
+result
+replay
+```
+
+Main Processでは`play_id`から対象メディアディレクトリを導出し、`mediaType`から対象ファイルを決定する。
+
+```text
+result
+↓
+data/media/<play_id>/result.png
+```
+
+```text
+replay
+↓
+data/media/<play_id>/replay.mp4
+```
+
+Rendererから任意のFilesystemパスを指定して削除する方式は使用しない。
+
+---
+
+## 17.3 Windowsのゴミ箱への移動
+
+メディアファイルの削除にはElectronの`shell.trashItem()`を使用する。
+
+直接的なファイル完全削除は行わない。
+
+```text
+対象メディア
+↓
+shell.trashItem()
+↓
+Windowsのゴミ箱
+```
+
+削除対象ファイルが存在しない場合は、すでに削除済みの状態として扱える結果をRendererへ返す。
+
+削除成功時：
+
+```text
+{
+  trashed: true
+}
+```
+
+削除失敗時：
+
+```text
+{
+  trashed: false,
+  reason: ...
+}
+```
+
+メディア削除によってSQLite上のプレイレコードを削除・変更しない。
+
+---
+
+## 17.4 メディアディレクトリの処理
+
+`result.png`および`replay.mp4`の両方が存在しなくなった場合、対象のメディアディレクトリもWindowsのゴミ箱へ移動する。
+
+```text
+data/media/<play_id>/
+├─ result.png
+└─ replay.mp4
+```
+
+片方のみを削除した場合は、メディアディレクトリを残す。
+
+```text
+result.pngなし
+replay.mp4あり
+↓
+data/media/<play_id>/ を維持
+```
+
+```text
+result.pngあり
+replay.mp4なし
+↓
+data/media/<play_id>/ を維持
+```
+
+両方を削除した場合：
+
+```text
+result.pngなし
+replay.mp4なし
+↓
+data/media/<play_id>/
+↓
+Windowsのゴミ箱
+```
+
+メディアディレクトリをゴミ箱へ移動する前に、対象メディアが存在しないことを確認する。
+
+メディアディレクトリの移動によってSQLite上のプレイレコードを削除・変更しない。
 
 ---
 
@@ -942,6 +1208,42 @@ replayVideoあり
 
 それぞれ独立して表示する。
 
+DetailViewでは各メディアに対して削除操作を提供する。
+
+削除操作：
+
+```text
+削除操作
+↓
+確認ダイアログ
+↓
+Renderer
+↓
+play-log:trash-media
+↓
+Main Process
+↓
+Windowsのゴミ箱
+```
+
+削除成功後は、Renderer側のメディア状態を更新する。
+
+```text
+result削除成功
+↓
+resultImage = null
+```
+
+```text
+replay削除成功
+↓
+replayVideo = null
+```
+
+メディア削除後もプレイ詳細情報は保持する。
+
+メディア削除によってDetailView自体を閉じたり、SQLiteのプレイレコードを削除したりしない。
+
 ---
 
 # 23. Replay Video
@@ -958,6 +1260,22 @@ object-fit: contain
 ```
 
 動画全体をRendererのJavaScriptメモリへ読み込まず、ブラウザのメディア要素からカスタムプロトコルへアクセスする。
+
+Replay動画の削除操作を実行する場合、DetailViewは`HTMLVideoElement`への参照を保持する。
+
+動画が再生中の場合：
+
+```text
+削除確認
+↓
+video.pause()
+↓
+play-log:trash-media
+↓
+Windowsのゴミ箱へ移動
+```
+
+動画の再生停止を行ってからファイル削除処理を実行する。
 
 ---
 
@@ -1448,6 +1766,12 @@ components/
 └─ playlog/
    ├─ ScoreCard
    ├─ DetailView
+   │  ├─ プレイ詳細
+   │  ├─ 編集
+   │  ├─ RESULT IMAGE
+   │  ├─ REPLAY VIDEO
+   │  ├─ 画像プレビュー
+   │  └─ メディア削除
    └─ PlayLogFilters
 
 hooks/
@@ -1590,6 +1914,7 @@ UI内部仕様は、UI外部仕様で定義された機能を実現するため�
 | GRADE | `utils/playLog.ts` |
 | RESULT IMAGE | `DetailView` / `sdvx-media://` |
 | REPLAY VIDEO | `DetailView` / `sdvx-media://` |
+| メディア削除 | `DetailView` / `window.api` / `play-log:trash-media` / `main.mjs` / `shell.trashItem()` |
 | 画像プレビュー | `DetailView` |
 | Browser History | `usePlayLogNavigation` |
 | UI初期状態 | `useSystemReady` |
@@ -1644,6 +1969,13 @@ Electron Main
 ├─ preload.mjs
 ├─ db.mjs
 └─ paths.mjs
+
+Preload
+└─ window.api
+   ├─ getPlayLogs()
+   ├─ getPlayMedia()
+   ├─ updatePlayLog()
+   └─ trashPlayMedia()
 
 Renderer
 ├─ App.tsx
