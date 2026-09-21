@@ -68,10 +68,16 @@ ocr:
       height: 41
 
     score:
-      x: 427
-      y: 1065
-      width: 380
-      height: 60
+      first:
+        x: 427
+        y: 1065
+        width: 234
+        height: 60
+      second:
+        x: 660
+        y: 1086
+        width: 147
+        height: 37
 
     score_delta:
       x: 816

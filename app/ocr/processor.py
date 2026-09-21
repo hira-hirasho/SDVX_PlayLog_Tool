@@ -35,6 +35,13 @@ class OCRProcessor:
         "ex_score_delta",
     )
 
+    NUMERIC_FIELDS = (
+        "level",
+        "score_first",
+        "score_second",
+        "ex_score",
+    )
+
     DIFFICULTY_CANDIDATES = (
         "NOV",
         "ADV",
@@ -86,6 +93,22 @@ class OCRProcessor:
             enable_mkldnn=False,
             engine="paddle",
         )
+        
+        self._text_rec_model = (
+            self._ocr
+            .paddlex_pipeline
+            ._pipeline
+            .text_rec_model
+        )
+
+        self._numeric_allowed_indices = (
+            self._build_numeric_allowed_indices()
+        )
+
+        logger.info(
+            "Numeric OCR enabled: "
+            f"allowed_indices={self._numeric_allowed_indices}"
+        )
 
         logger.info("PaddleOCR initialized")
 
@@ -113,10 +136,21 @@ class OCRProcessor:
                 )
 
                 try:
-                    raw_texts[name] = self._recognize_crop(
-                        crop,
-                        name,
-                    )
+                    if name in self.NUMERIC_FIELDS:
+                        raw_texts[name] = (
+                            self._recognize_numeric_crop(
+                                crop,
+                                name,
+                            )
+                        )
+                    else:
+                        raw_texts[name] = (
+                            self._recognize_crop(
+                                crop,
+                                name,
+                            )
+                        )
+
                 except Exception:
                     logger.exception(
                         f"OCR field failed: {name}"
@@ -130,6 +164,11 @@ class OCRProcessor:
 
             finally:
                 crop.close()
+
+        score_text = self._combine_score(
+            raw_texts.get("score_first"),
+            raw_texts.get("score_second"),
+        )
 
         result = OCRResult(
             song_name=self._normalize_text(
@@ -148,7 +187,7 @@ class OCRProcessor:
                 self._level_max,
             ),
             score=normalize_fixed_digits(
-                raw_texts.get("score"),
+                score_text,
                 expected_length=8,
             ),
             score_delta=normalize_numeric_text(
@@ -227,6 +266,182 @@ class OCRProcessor:
             )
 
         return last_text
+
+    def _recognize_numeric_crop(
+        self,
+        image: Image.Image,
+        field_name: str,
+    ) -> str | None:
+        """数字候補だけを許可してOCRする。"""
+        image_array = np.asarray(image)
+
+        last_text: str | None = None
+
+        for attempt in range(1, self._max_attempts + 1):
+            logger.debug(
+                "Numeric OCR attempt: "
+                f"field={field_name}, "
+                f"attempt={attempt}/{self._max_attempts}"
+            )
+
+            text = self._recognize_numeric_once(
+                image_array,
+            )
+
+            last_text = text
+
+            if text:
+                logger.debug(
+                    "Numeric OCR attempt succeeded: "
+                    f"field={field_name}, "
+                    f"attempt={attempt}"
+                )
+                return text
+
+            logger.warning(
+                "Numeric OCR attempt returned no text: "
+                f"field={field_name}, "
+                f"attempt={attempt}"
+            )
+
+        return last_text
+
+    def _recognize_numeric_once(
+        self,
+        image_array: np.ndarray,
+    ) -> str | None:
+        """モデル出力を数字＋blankに制限してCTCデコードする。"""
+        batch_data = next(
+            iter(
+                self._text_rec_model.batch_sampler(
+                    [image_array],
+                )
+            )
+        )
+
+        raw_images = self._text_rec_model.pre_tfs["Read"](
+            imgs=batch_data.instances,
+        )
+
+        width_list = [
+            image.shape[1] / float(image.shape[0])
+            for image in raw_images
+        ]
+
+        resized_images = self._text_rec_model.pre_tfs[
+            "ReisizeNorm"
+        ](
+            imgs=raw_images,
+        )
+
+        batch_images = self._text_rec_model.pre_tfs[
+            "ToBatch"
+        ](
+            imgs=resized_images,
+        )
+
+        predictions = self._text_rec_model.runner(
+            x=batch_images,
+        )
+
+        if not predictions:
+            return None
+
+        logits = predictions[0]
+
+        if not isinstance(logits, np.ndarray):
+            logits = np.asarray(logits)
+
+        masked_logits = self._mask_numeric_logits(
+            logits,
+        )
+
+        decoded = self._text_rec_model.post_op(
+            [masked_logits],
+            return_word_box=False,
+            wh_ratio_list=width_list,
+            max_wh_ratio=max(width_list),
+        )
+
+        if not decoded:
+            return None
+
+        text = decoded[0][0]
+
+        if not isinstance(text, str):
+            return None
+
+        text = text.strip()
+
+        return text or None
+
+    def _mask_numeric_logits(
+        self,
+        logits: np.ndarray,
+    ) -> np.ndarray:
+        """数字とCTC blank以外のクラスを選択不能にする。"""
+        masked = np.full_like(
+            logits,
+            -np.inf,
+        )
+
+        allowed_indices = tuple(
+            self._numeric_allowed_indices
+        )
+
+        masked[
+            ...,
+            allowed_indices,
+        ] = logits[
+            ...,
+            allowed_indices,
+        ]
+
+        return masked
+
+    def _build_numeric_allowed_indices(self) -> tuple[int, ...]:
+        """モデルの文字辞書から数字＋blankのindexを取得する。"""
+        character = self._text_rec_model.post_op.character
+
+        if not isinstance(character, list):
+            raise ValueError(
+                "Unexpected OCR character dictionary type"
+            )
+
+        try:
+            blank_index = character.index("blank")
+        except ValueError as error:
+            raise ValueError(
+                "OCR character dictionary does not contain "
+                "the CTC blank token"
+            ) from error
+
+        digit_indices: set[int] = set()
+
+        for digit in "0123456789":
+            try:
+                digit_indices.add(
+                    character.index(digit)
+                )
+            except ValueError as error:
+                raise ValueError(
+                    "OCR character dictionary does not contain "
+                    f"digit: {digit}"
+                ) from error
+
+        return tuple(
+            sorted({blank_index, *digit_indices})
+        )
+
+    @staticmethod
+    def _combine_score(
+        first: str | None,
+        second: str | None,
+    ) -> str | None:
+        if not first or not second:
+            return None
+
+        return f"{first}{second}"
 
     @staticmethod
     def _extract_text(result) -> str | None:

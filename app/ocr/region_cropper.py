@@ -38,7 +38,8 @@ class OCRRegionCropper:
         "artist",
         "difficulty",
         "level",
-        "score",
+        "score_first",
+        "score_second",
         "score_delta",
         "ex_score",
         "ex_score_delta",
@@ -62,42 +63,90 @@ class OCRRegionCropper:
         loaded_regions: dict[str, OCRRegion] = {}
 
         for name in self.REQUIRED_REGIONS:
-            data = regions.get(name)
+            data = self._get_region_config(
+                regions,
+                name,
+            )
 
-            if not isinstance(data, dict):
-                raise ValueError(
-                    f"OCR region is not configured: ocr.regions.{name}"
-                )
-
-            try:
-                x = int(data["x"])
-                y = int(data["y"])
-                width = int(data["width"])
-                height = int(data["height"])
-            except (KeyError, TypeError, ValueError) as error:
-                raise ValueError(
-                    f"Invalid OCR region: ocr.regions.{name}"
-                ) from error
-
-            if x < 0 or y < 0:
-                raise ValueError(
-                    f"OCR region coordinates must be >= 0: {name}"
-                )
-
-            if width <= 0 or height <= 0:
-                raise ValueError(
-                    f"OCR region size must be > 0: {name}"
-                )
-
-            loaded_regions[name] = OCRRegion(
-                name=name,
-                x=x,
-                y=y,
-                width=width,
-                height=height,
+            loaded_regions[name] = self._create_region(
+                name,
+                data,
             )
 
         return loaded_regions
+
+    @staticmethod
+    def _get_region_config(
+        regions: dict,
+        name: str,
+    ) -> dict:
+        """領域名に対応する設定を取得する。"""
+        if name == "score_first":
+            score = regions.get("score")
+
+            if not isinstance(score, dict):
+                raise ValueError(
+                    "OCR region is not configured: "
+                    "ocr.regions.score"
+                )
+
+            data = score.get("first")
+
+        elif name == "score_second":
+            score = regions.get("score")
+
+            if not isinstance(score, dict):
+                raise ValueError(
+                    "OCR region is not configured: "
+                    "ocr.regions.score"
+                )
+
+            data = score.get("second")
+
+        else:
+            data = regions.get(name)
+
+        if not isinstance(data, dict):
+            raise ValueError(
+                f"OCR region is not configured: "
+                f"ocr.regions.{name}"
+            )
+
+        return data
+
+    @staticmethod
+    def _create_region(
+        name: str,
+        data: dict,
+    ) -> OCRRegion:
+        """設定値からOCRRegionを生成する。"""
+        try:
+            x = int(data["x"])
+            y = int(data["y"])
+            width = int(data["width"])
+            height = int(data["height"])
+        except (KeyError, TypeError, ValueError) as error:
+            raise ValueError(
+                f"Invalid OCR region: ocr.regions.{name}"
+            ) from error
+
+        if x < 0 or y < 0:
+            raise ValueError(
+                f"OCR region coordinates must be >= 0: {name}"
+            )
+
+        if width <= 0 or height <= 0:
+            raise ValueError(
+                f"OCR region size must be > 0: {name}"
+            )
+
+        return OCRRegion(
+            name=name,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+        )
 
     def _get_expected_image_size(self) -> tuple[int, int]:
         """OCR処理対象となるリザルト画像サイズを返す。"""

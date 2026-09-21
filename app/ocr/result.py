@@ -27,45 +27,20 @@ def _normalize_numeric_parts(
     if not text or text == "-":
         return None
 
-    text = text.replace(" ", "")
-    text = text.replace(",", "")
-
-    # OCRで発生しやすい文字誤認識を補正する。
-    replacements = {
-        "O": "0",
-        "o": "0",
-        "Q": "0",
-        "D": "0",
-        "I": "1",
-        "l": "1",
-        "|": "1",
-        "!": "1",
-        "Z": "2",
-        "z": "2",
-        "S": "5",
-        "s": "5",
-        "G": "6",
-        "g": "9",
-        "B": "8",
-    }
-
-    normalized = "".join(
-        replacements.get(character, character)
-        for character in text
-    )
+    text = text.replace(" ", "").replace(",", "")
 
     sign = ""
 
-    if normalized.startswith("+"):
+    if text.startswith("+"):
         sign = "+"
-        normalized = normalized[1:]
-    elif normalized.startswith("-"):
+        text = text[1:]
+    elif text.startswith("-"):
         sign = "-"
-        normalized = normalized[1:]
+        text = text[1:]
 
     digits = "".join(
         character
-        for character in normalized
+        for character in text
         if character.isdigit()
     )
 

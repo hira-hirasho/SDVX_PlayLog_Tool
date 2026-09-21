@@ -1,4 +1,3 @@
-````markdown
 # SDVX PlayLog Tool 内部仕様書
 
 ## 1. 文書情報
@@ -665,20 +664,42 @@ OCR実行は`app/ocr/processor.py`に集約する。
 
 OCR対象はResultStateが保持する1080×1920画像とする。
 
-PaddleOCRを使用する。
+PaddleOCR 3.7.0を使用する。
 
-OCRエンジン固有の設定と、認識結果の正規化処理を分離する。
+OCR処理では、項目ごとに認識方式を分ける。
+
+通常の文字列項目はPaddleOCRの標準認識結果を使用する。
+
+数値項目では、OCR推論時の候補クラスを数字に限定する。
+
+これにより、数字として認識すべき文字について、OCR後の文字置換だけに依存せず、推論時点で`0`～`9`を優先的に選択できるようにする。
 
 ```text
 Processor
-└─ OCR実行
-
-Result
-├─ 結果モデル
-├─ 数値正規化
-├─ difficulty正規化
-└─ level正規化
+│
+├─ 通常文字列OCR
+│   ├─ song_name
+│   └─ artist
+│
+├─ difficulty OCR
+│   └─ difficulty
+│
+├─ 数値限定OCR
+│   ├─ level
+│   ├─ score.first
+│   ├─ score.second
+│   └─ ex_score
+│
+└─ 通常OCR
+    ├─ score_delta
+    └─ ex_score_delta
 ```
+
+数値限定OCRでは、PaddleOCR内部の文字認識モデルが出力するクラス候補について、空白（blank）および0～9のみを許可する。
+
+アルファベット等の非数字クラスはOCR結果取得後にNoneへ変換するのではなく、OCRの候補から除外する。
+
+PaddleOCRの内部認識モデルへのアクセスはOCRProcessorに閉じ込め、他のコンポーネントから直接利用しない。
 
 ---
 
@@ -697,13 +718,48 @@ normalize_difficulty
 normalize_level
 ```
 
-数値項目のOCR誤認識補正は数値項目に限定する。
+数値項目については、可能な範囲でOCR推論時に候補クラスを数字へ限定する。
 
-曲名・アーティスト名には数値補正を適用しない。
+ただし、score_deltaおよびex_score_deltaは+ / -を含むため、通常のOCR認識結果を使用する。
 
-SCORE等が取得できない場合は`None`を許容する。
+OCR後の正規化では、OCR結果に含まれる空白、符号、既知の数値誤認識等を必要に応じて処理する。
 
-記録条件判定側では`None`を数値と比較して例外を発生させない。
+数値限定OCRであっても、認識結果が取得できない場合や形式が期待値を満たさない場合はNoneを許容する。
+
+曲名・アーティスト名には数値項目用の正規化処理を適用しない。
+
+SCOREは以下の2領域から構成する。
+
+```text
+score.first
+↓
+4桁
+
+score.second
+↓
+4桁
+```
+
+両方の領域から4桁の数値を取得できた場合、それらを連結して8桁のSCOREとしてOCRResult.scoreへ格納する。
+
+いずれか一方が取得できない場合、SCOREはNoneとする。
+
+OCRResultの公開フィールドは以下を維持する。
+
+```text
+song_name
+artist
+difficulty
+level
+score
+score_delta
+ex_score
+ex_score_delta
+```
+
+score.firstおよびscore.secondはOCR処理上の中間値であり、OCRResultの公開フィールドとして保持しない。
+
+記録条件判定側ではNoneを数値と比較して例外を発生させない。
 
 ---
 
@@ -1679,8 +1735,8 @@ X投稿本文のDB保存
 | F12Detector | F12入力検出 |
 | RecordHandler | 通常記録処理の制御 |
 | F12Handler | F12記録処理の制御 |
-| OCR Processor | OCR実行 |
-| OCR Result | OCR結果モデル・正規化 |
+| OCR Processor | OCR実行、項目別OCR方式の選択、数値限定OCRの実行、OCR結果の組み立て |
+| OCR Result | OCR結果モデル、OCR結果の正規化 |
 | PlayRecord | プレイ記録モデル生成 |
 | SQLite | SQLiteへの保存 |
 | Excel | Excelテーブルへの保存 |
@@ -1851,4 +1907,3 @@ SDVX PlayLog Tool UI仕様書
 ---
 
 以上を、2026-09-21時点における「SDVX PlayLog Tool 内部仕様書」の基準とする。
-````
