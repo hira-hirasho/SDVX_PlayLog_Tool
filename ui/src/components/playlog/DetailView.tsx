@@ -582,16 +582,6 @@ export function DetailView({
 
               {/* Grade terminal — the one focal "stamp" moment of this screen */}
               <div className="relative flex min-h-64 flex-col items-center justify-center border-t border-zinc-800 bg-[#04070c]/80 p-8 lg:border-l lg:border-t-0">
-              <div
-                className="absolute right-5 top-5 font-mono text-sm font-black uppercase tracking-[0.28em]"
-                style={{
-                  color: gradeColor,
-                  textShadow: `0 0 10px ${gradeColor}66`,
-                }}
-              >
-                GRADE
-              </div>
-
                 <div className="relative flex h-40 w-40 items-center justify-center">
                   <span
                     className="plg-glow-pulse absolute inset-0"
