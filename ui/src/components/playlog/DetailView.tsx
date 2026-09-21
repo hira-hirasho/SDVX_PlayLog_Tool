@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useRef, useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { ArrowLeft, Trash2 } from "lucide-react";
 
 import type { PlayLogRow } from '../../types/playLog'
 import { FxStyles } from '../effects/FxStyles'
@@ -315,84 +315,94 @@ export function DetailView({
 
           <div className="absolute right-0 top-0 h-full w-[45%] opacity-30 bg-[linear-gradient(135deg,transparent_0%,transparent_48%,rgba(34,211,238,0.15)_49%,transparent_50%,transparent_58%,rgba(217,70,239,0.12)_59%,transparent_60%)]" />
 
-          <div className="relative mx-auto max-w-[1600px] px-6 py-6">
-            <div className="flex items-center justify-between gap-6">
-              <div>
-                <div className="mb-2 flex items-center gap-3">
-                  <span className="h-px w-8 bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.5)]" />
-
-                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.38em] text-cyan-300/80">
-                    SOUND VOLTEX
+          <div className="flex items-center">
+            <div className="w-[calc((100%-1600px)/2)] shrink-0 pl-6">
+              {!isEditing && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="group relative h-11.5 translate-x-2.25 overflow-hidden border border-zinc-800 bg-[#070a10] px-5 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
+                >
+                  <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
+                
+                  <span className="flex h-full items-center gap-3">
+                    <ArrowLeft
+                      size={18}
+                      strokeWidth={2}
+                      className="shrink-0 transition-transform group-hover:-translate-x-1"
+                    />
+                    <span className="leading-none">HISTORY</span>
                   </span>
+                </button>
+              )}
+            </div>
 
-                  <span className="h-1 w-1 bg-fuchsia-400" />
+            <div className="mx-auto w-full max-w-[1600px] px-6 py-6">
+              <div className="flex items-center justify-between gap-6">
+                {/* タイトルロゴ */}
+                <div>
+                  <div className="mb-2 flex items-center gap-3">
+                    <span className="h-px w-8 bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.5)]" />
+
+                    <span className="font-mono text-[9px] font-bold uppercase tracking-[0.38em] text-cyan-300/80">
+                      SOUND VOLTEX
+                    </span>
+
+                    <span className="h-1 w-1 bg-fuchsia-400" />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-2xl font-black italic uppercase tracking-[0.12em] text-white sm:text-3xl">
+                      <span className="text-cyan-300">SDVX</span>
+                      <span className="mx-2 text-zinc-700">/</span>
+                      PLAYLOG
+                    </span>
+
+                    <span className="hidden h-px w-12 bg-fuchsia-400/60 sm:block" />
+
+                    <span className="hidden font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-fuchsia-300 sm:block">
+                      RECORD DETAIL
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-2xl font-black italic uppercase tracking-[0.12em] text-white sm:text-3xl">
-                    <span className="text-cyan-300">SDVX</span>
-                    <span className="mx-2 text-zinc-700">/</span>
-                    PLAYLOG
-                  </span>
-
-                  <span className="hidden h-px w-12 bg-fuchsia-400/60 sm:block" />
-
-                  <span className="hidden font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-fuchsia-300 sm:block">
-                    RECORD DETAIL
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {!isEditing ? (
-                  <>
+                {/* EDIT / SAVE / CANCEL */}
+                <div className="flex shrink-0 items-center gap-3">
+                  {!isEditing ? (
                     <button
                       type="button"
                       onClick={startEditing}
-                      className="group relative overflow-hidden border border-zinc-800 bg-[#070a10] px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-fuchsia-400/60 hover:text-fuchsia-300"
+                      className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-fuchsia-400/60 hover:text-fuchsia-300"
                     >
                       <span className="absolute left-0 top-0 h-px w-6 bg-fuchsia-400 transition-all group-hover:w-full" />
-                      <span className="flex items-center gap-3">
-                        <span className="text-lg">✎</span>
+                    
+                      <span className="flex h-full items-center gap-3 px-5">
+                        <span className="text-lg leading-none">✎</span>
                         EDIT
                       </span>
                     </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={saveEditing}
+                        disabled={isSaving}
+                        className="group relative h-11.5 overflow-hidden border border-cyan-400/60 bg-[#070a10] px-5 font-mono text-xs font-bold uppercase tracking-[0.18em] text-cyan-300 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        SAVE
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={onBack}
-                      className="group relative overflow-hidden border border-zinc-800 bg-[#070a10] px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
-                    >
-                      <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
-                      <span className="flex items-center gap-3">
-                        <span className="text-lg transition-transform group-hover:-translate-x-1">
-                          ←
-                        </span>
-                        HISTORY
-                      </span>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={saveEditing}
-                      disabled={isSaving}
-                      className="group relative overflow-hidden border border-cyan-400/60 bg-[#070a10] px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-cyan-300 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      SAVE
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={cancelEditing}
-                      disabled={isSaving}
-                      className="group relative overflow-hidden border border-zinc-800 bg-[#070a10] px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      CANCEL
-                    </button>
-                  </>
-                )}
+                      <button
+                        type="button"
+                        onClick={cancelEditing}
+                        disabled={isSaving}
+                        className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] px-5 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        CANCEL
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -415,17 +425,20 @@ export function DetailView({
               }}
             />
 
-            <div className="relative grid gap-0 lg:grid-cols-[minmax(0,1fr)_250px]">
-              <div className="p-7 sm:p-9 lg:p-10">
-                <div className="mb-5 flex items-center gap-3">
-                  <span className="h-px w-12 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.7)]" />
+            <div className="relative overflow-hidden">
+              <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-cyan-400/3 via-transparent to-fuchsia-500/4" />
 
+              <div className="relative p-6 sm:p-7 lg:p-8">
+                {/* Header */}
+                <div className="flex items-center gap-3">
+                  <span className="h-px w-12 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.7)]" />
                   <span className="font-mono text-xs font-bold uppercase tracking-[0.3em] text-cyan-300">
                     RECORD / PERFORMANCE
                   </span>
                 </div>
 
-                <div className="mb-6 flex flex-wrap items-center gap-3">
+                {/* Difficulty / Level / Date */}
+                <div className="mt-3 flex items-center gap-5">
                   {isEditing ? (
                     <>
                       <select
@@ -436,7 +449,7 @@ export function DetailView({
                             difficulty: event.target.value || null,
                           }))
                         }}
-                        className="h-10 w-24 border border-fuchsia-400/50 bg-[#070a10] px-3 font-mono text-sm font-bold uppercase text-zinc-100 outline-none focus:border-fuchsia-400"
+                        className="h-9 w-24 border border-fuchsia-400/50 bg-[#070a10] px-3 font-mono text-sm font-bold uppercase text-zinc-100 outline-none focus:border-fuchsia-400"
                       >
                         <option value="">---</option>
                         <option value="NOV">NOV</option>
@@ -452,7 +465,7 @@ export function DetailView({
                         <option value="NBL">NBL</option>
                       </select>
 
-                      <label className="flex items-center gap-2 font-mono text-xl font-black tracking-wide text-zinc-200">
+                      <label className="flex h-9 items-center gap-2 font-mono text-lg font-black tracking-wide text-zinc-200">
                         LEVEL
                         <input
                           type="number"
@@ -466,14 +479,14 @@ export function DetailView({
                                   : Number(event.target.value),
                             }))
                           }}
-                          className="h-10 w-20 border border-fuchsia-400/50 bg-[#070a10] px-3 font-mono text-xl font-black text-zinc-100 outline-none focus:border-fuchsia-400"
+                          className="h-9 w-20 border border-fuchsia-400/50 bg-[#070a10] px-3 font-mono text-lg font-black text-zinc-100 outline-none focus:border-fuchsia-400"
                         />
                       </label>
                     </>
                   ) : (
                     <>
                       <span
-                        className="flex h-10 w-16 items-center justify-center border text-base font-black"
+                        className="flex h-9 w-16 shrink-0 items-center justify-center border text-sm font-black"
                         style={{
                           color: difficultyColor,
                           borderColor: `${difficultyColor}99`,
@@ -484,205 +497,211 @@ export function DetailView({
                         {row.difficulty}
                       </span>
 
-                      <span className="font-mono text-xl font-black tracking-wide text-zinc-200">
+                      <span className="flex h-9 items-center font-mono text-lg font-black tracking-wide text-zinc-200">
                         LEVEL {row.level}
                       </span>
                     </>
                   )}
 
-                  <span className="h-1 w-1 bg-zinc-700" />
+                  <span className="h-1 w-1 shrink-0 bg-zinc-700" />
 
-                  <span className="font-mono text-sm font-semibold tracking-wide text-zinc-500">
+                  <span className="flex h-9 items-center font-mono text-xs font-semibold tracking-wide text-zinc-500">
                     {formatDate(row.played_at)}
                   </span>
                 </div>
 
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedRow.song_name ?? ''}
-                    onChange={(event) => {
-                      setEditedRow((current) => ({
-                        ...current,
-                        song_name: event.target.value || null,
-                      }))
-                    }}
-                    className="w-full border border-fuchsia-400/50 bg-[#070a10] px-4 py-3 font-mono text-2xl font-black uppercase leading-tight text-white outline-none focus:border-fuchsia-400 sm:text-4xl lg:text-5xl"
-                  />
-                ) : (
-                  <h1
-                    className="min-h-[3.15rem] wrap-break-word font-mono text-4xl font-black uppercase leading-[1.05] tracking-tight text-white sm:min-h-[3.7rem] sm:text-5xl lg:min-h-16 lg:text-6xl"
-                    title={row.song_name ?? ''}
-                  >
-                    {row.song_name ?? '\u00A0'}
-                  </h1>
-                )}
-
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedRow.artist ?? ''}
-                    onChange={(event) => {
-                      setEditedRow((current) => ({
-                        ...current,
-                        artist: event.target.value || null,
-                      }))
-                    }}
-                    className="mt-4 w-full border border-fuchsia-400/50 bg-[#070a10] px-4 py-3 font-mono text-lg font-semibold text-zinc-100 outline-none focus:border-fuchsia-400 sm:text-xl"
-                  />
-                ) : (
-                  <p
-                    className="mt-4 min-h-7 wrap-break-word font-mono text-lg font-semibold text-zinc-500 sm:min-h-8 sm:text-xl"
-                    title={row.artist ?? ''}
-                  >
-                    {row.artist ?? '\u00A0'}
-                  </p>
-                )}
-
-                <div className="mt-8 h-px w-full bg-linear-to-r from-cyan-400/50 via-zinc-800 to-transparent" />
-
-                <div className="mt-7 grid gap-6 sm:grid-cols-2">
-                  <div>
-                    <div className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-zinc-500">
-                      SCORE
-                    </div>
+                {/* Song / Grade */}
+                <div className="mt-3 flex items-center justify-between gap-6">
+                  <div className="min-w-0 flex-1">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedRow.song_name ?? ''}
+                        onChange={(event) => {
+                          setEditedRow((current) => ({
+                            ...current,
+                            song_name: event.target.value || null,
+                          }))
+                        }}
+                        className="w-full border border-fuchsia-400/50 bg-[#070a10] px-4 py-2 font-mono text-2xl font-black uppercase leading-tight text-white outline-none focus:border-fuchsia-400 sm:text-3xl lg:text-4xl"
+                      />
+                    ) : (
+                      <h1
+                        className="wrap-break-word font-mono text-3xl font-black uppercase leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-4xl"
+                        title={row.song_name ?? ''}
+                      >
+                        {row.song_name ?? '\u00A0'}
+                      </h1>
+                    )}
 
                     {isEditing ? (
-                      <>
-                        <input
-                          type="number"
-                          value={editedRow.score ?? ''}
-                          onChange={(event) => {
-                            setEditedRow((current) => ({
-                              ...current,
-                              score:
-                                event.target.value === ''
-                                  ? null
-                                  : Number(event.target.value),
-                            }))
-                          }}
-                          className="mt-2 w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-3xl font-black tabular-nums text-white outline-none focus:border-fuchsia-400 sm:text-4xl"
-                        />
-
-                        <input
-                          type="number"
-                          value={editedRow.score_delta ?? ''}
-                          onChange={(event) => {
-                            setEditedRow((current) => ({
-                              ...current,
-                              score_delta:
-                                event.target.value === ''
-                                  ? null
-                                  : Number(event.target.value),
-                            }))
-                          }}
-                          placeholder="SCORE Δ"
-                          className="mt-2 w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-lg font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400"
-                        />
-                      </>
+                      <input
+                        type="text"
+                        value={editedRow.artist ?? ''}
+                        onChange={(event) => {
+                          setEditedRow((current) => ({
+                            ...current,
+                            artist: event.target.value || null,
+                          }))
+                        }}
+                        className="mt-1 w-full border border-fuchsia-400/50 bg-[#070a10] px-4 py-2 font-mono text-base font-semibold text-zinc-100 outline-none focus:border-fuchsia-400 sm:text-lg"
+                      />
                     ) : (
-                      <>
-                        <div className="mt-2 flex min-h-12 items-center font-mono text-4xl font-black tabular-nums text-white sm:min-h-14 sm:text-5xl">
-                          {formatScore(row.score) || '\u00A0'}
-                        </div>
-
-                        <div
-                          className={`mt-2 min-h-7 font-mono text-lg font-black tabular-nums ${getDeltaClass(row.score_delta)}`}
-                        >
-                          {formatDelta(row.score_delta) || '\u00A0'}
-                        </div>
-                      </>
+                      <p
+                        className="mt-1 wrap-break-word font-mono text-base font-semibold text-zinc-500 sm:text-lg"
+                        title={row.artist ?? ''}
+                      >
+                        {row.artist ?? '\u00A0'}
+                      </p>
                     )}
                   </div>
 
-                  <div>
-                    <div className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-zinc-500">
-                      EX SCORE
+                  {/* Grade */}
+                  <div className="relative flex h-20 w-20 shrink-0 items-center justify-center">
+                    <span
+                      className="plg-glow-pulse absolute inset-0"
+                      style={{ boxShadow: `0 0 38px ${gradeColor}50` }}
+                    />
+
+                    <div
+                      className="plg-stamp-in relative flex h-full w-full items-center justify-center border"
+                      style={{
+                        color: gradeColor,
+                        borderColor: `${gradeColor}66`,
+                        backgroundColor: `${gradeColor}0d`,
+                        boxShadow: `inset 0 0 24px ${gradeColor}08`,
+                      }}
+                    >
+                      <span
+                        className="absolute inset-2 border border-dashed"
+                        style={{ borderColor: `${gradeColor}25` }}
+                      />
+
+                      <span className="relative font-mono text-4xl font-black italic drop-shadow-[0_0_14px_currentColor]">
+                        {grade || '-'}
+                      </span>
+
+                      <span
+                        className="absolute bottom-0 left-0 h-0.5 w-full"
+                        style={{
+                          backgroundColor: gradeColor,
+                          boxShadow: `0 0 10px ${gradeColor}`,
+                        }}
+                      />
                     </div>
-
-                    {isEditing ? (
-                      <>
-                        <input
-                          type="number"
-                          value={editedRow.ex_score ?? ''}
-                          onChange={(event) => {
-                            setEditedRow((current) => ({
-                              ...current,
-                              ex_score:
-                                event.target.value === ''
-                                  ? null
-                                  : Number(event.target.value),
-                            }))
-                          }}
-                          className="mt-2 w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-3xl font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400 sm:text-4xl"
-                        />
-
-                        <input
-                          type="number"
-                          value={editedRow.ex_score_delta ?? ''}
-                          onChange={(event) => {
-                            setEditedRow((current) => ({
-                              ...current,
-                              ex_score_delta:
-                                event.target.value === ''
-                                  ? null
-                                  : Number(event.target.value),
-                            }))
-                          }}
-                          placeholder="EX SCORE Δ"
-                          className="mt-2 w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-lg font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400"
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <div className="mt-2 flex min-h-12 items-center font-mono text-3xl font-black tabular-nums text-zinc-200 sm:min-h-14 sm:text-4xl">
-                          {formatScore(row.ex_score) || '\u00A0'}
-                        </div>
-
-                        <div
-                          className={`mt-2 min-h-7 font-mono text-lg font-black tabular-nums ${getDeltaClass(row.ex_score_delta)}`}
-                        >
-                          {formatDelta(row.ex_score_delta) || '\u00A0'}
-                        </div>
-                      </>
-                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Grade terminal — the one focal "stamp" moment of this screen */}
-              <div className="relative flex min-h-64 flex-col items-center justify-center border-t border-zinc-800 bg-[#04070c]/80 p-8 lg:border-l lg:border-t-0">
-                <div className="relative flex h-40 w-40 items-center justify-center">
-                  <span
-                    className="plg-glow-pulse absolute inset-0"
-                    style={{ boxShadow: `0 0 60px ${gradeColor}55` }}
-                  />
+                {/* Scores */}
+                <div className="mt-5 border-t border-zinc-800 pt-4">
+                  <div className="grid grid-cols-2 gap-8 sm:gap-12">
+                    {/* SCORE */}
+                    <div className="min-w-0">
+                      <div className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-zinc-500">
+                        SCORE
+                      </div>
 
-                  <div
-                    className="plg-stamp-in relative flex h-full w-full items-center justify-center border"
-                    style={{
-                      color: gradeColor,
-                      borderColor: `${gradeColor}66`,
-                      backgroundColor: `${gradeColor}0d`,
-                      boxShadow: `inset 0 0 30px ${gradeColor}08`,
-                    }}
-                  >
-                    <span
-                      className="absolute inset-3 border border-dashed"
-                      style={{ borderColor: `${gradeColor}25` }}
-                    />
+                      {isEditing ? (
+                        <div className="mt-2 space-y-2">
+                          <input
+                            type="number"
+                            value={editedRow.score ?? ''}
+                            onChange={(event) => {
+                              setEditedRow((current) => ({
+                                ...current,
+                                score:
+                                  event.target.value === ''
+                                    ? null
+                                    : Number(event.target.value),
+                              }))
+                            }}
+                            className="w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-2xl font-black tabular-nums text-white outline-none focus:border-fuchsia-400 sm:text-3xl"
+                          />
 
-                    <span className="relative font-mono text-7xl font-black italic drop-shadow-[0_0_16px_currentColor]">
-                      {grade || '-'}
-                    </span>
+                          <input
+                            type="number"
+                            value={editedRow.score_delta ?? ''}
+                            onChange={(event) => {
+                              setEditedRow((current) => ({
+                                ...current,
+                                score_delta:
+                                  event.target.value === ''
+                                    ? null
+                                    : Number(event.target.value),
+                              }))
+                            }}
+                            placeholder="SCORE Δ"
+                            className="w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-1.5 font-mono text-base font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400"
+                          />
+                        </div>
+                      ) : (
+                        <div className="mt-1 flex min-h-10 items-end gap-4">
+                          <span className="font-mono text-3xl font-black tabular-nums leading-none text-white sm:text-4xl">
+                            {formatScore(row.score) || '\u00A0'}
+                          </span>
 
-                    <span
-                      className="absolute bottom-0 left-0 h-1 w-full"
-                      style={{
-                        backgroundColor: gradeColor,
-                        boxShadow: `0 0 14px ${gradeColor}`,
-                      }}
-                    />
+                          <span
+                            className={`font-mono text-base font-black tabular-nums leading-none sm:text-lg ${getDeltaClass(row.score_delta)}`}
+                          >
+                            {formatDelta(row.score_delta) || '\u00A0'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* EX SCORE */}
+                    <div className="min-w-0">
+                      <div className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-zinc-500">
+                        EX SCORE
+                      </div>
+
+                      {isEditing ? (
+                        <div className="mt-2 space-y-2">
+                          <input
+                            type="number"
+                            value={editedRow.ex_score ?? ''}
+                            onChange={(event) => {
+                              setEditedRow((current) => ({
+                                ...current,
+                                ex_score:
+                                  event.target.value === ''
+                                    ? null
+                                    : Number(event.target.value),
+                              }))
+                            }}
+                            className="w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-2xl font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400 sm:text-3xl"
+                          />
+
+                          <input
+                            type="number"
+                            value={editedRow.ex_score_delta ?? ''}
+                            onChange={(event) => {
+                              setEditedRow((current) => ({
+                                ...current,
+                                ex_score_delta:
+                                  event.target.value === ''
+                                    ? null
+                                    : Number(event.target.value),
+                              }))
+                            }}
+                            placeholder="EX SCORE Δ"
+                            className="w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-1.5 font-mono text-base font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400"
+                          />
+                        </div>
+                      ) : (
+                        <div className="mt-1 flex min-h-10 items-end gap-4">
+                          <span className="font-mono text-2xl font-black tabular-nums leading-none text-zinc-200 sm:text-3xl">
+                            {formatScore(row.ex_score) || '\u00A0'}
+                          </span>
+
+                          <span
+                            className={`font-mono text-base font-black tabular-nums leading-none sm:text-lg ${getDeltaClass(row.ex_score_delta)}`}
+                          >
+                            {formatDelta(row.ex_score_delta) || '\u00A0'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
