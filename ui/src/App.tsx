@@ -24,6 +24,8 @@ export default function App() {
     setStartDate,
     endDate,
     setEndDate,
+    scoreImproved,
+    setScoreImproved,
     resetFilters: resetFilterValues,
   } = usePlayLogFilters()
 
@@ -44,6 +46,7 @@ export default function App() {
     endDate,
     songName,
     artist,
+    scoreImproved,
   })
 
   const handleBack = () => {
@@ -71,7 +74,7 @@ export default function App() {
   // Re-keying the list block replays its entrance once per query change, so
   // motion here answers the person's own filtering action rather than
   // looping on its own.
-  const listKey = `${page}-${songName}-${artist}-${startDate}-${endDate}`
+  const listKey = `${page}-${songName}-${artist}-${startDate}-${endDate}-${scoreImproved}`
 
   return (
     <div className="plg-page-in relative min-h-screen overflow-hidden bg-[#03050a] text-zinc-100">
@@ -288,6 +291,8 @@ export default function App() {
                 setStartDate={setStartDate}
                 endDate={endDate}
                 setEndDate={setEndDate}
+                scoreImproved={scoreImproved}
+                setScoreImproved={setScoreImproved}
                 setPage={setPage}
                 resetFilters={resetFilters}
               />

@@ -19,6 +19,7 @@ export function getPlayLogs({
   endDate = null,
   songName = null,
   artist = null,
+  scoreImproved = true,
 } = {}) {
   const db = getDatabase()
 
@@ -43,6 +44,12 @@ export function getPlayLogs({
   if (artist) {
     conditions.push('artist LIKE @artist')
     params.artist = `%${artist}%`
+  }
+
+  if (scoreImproved) {
+    conditions.push(
+      '(score_delta > 0 OR ex_score_delta > 0)',
+    )
   }
 
   const whereClause =

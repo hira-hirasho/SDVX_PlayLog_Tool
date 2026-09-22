@@ -27,6 +27,7 @@ interface Window {
       endDate?: string | null
       songName?: string | null
       artist?: string | null
+      scoreImproved?: boolean
     }) => Promise<PlayLogListResult>
 
     getPlayMedia: (playId: string) => Promise<{

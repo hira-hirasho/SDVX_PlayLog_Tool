@@ -10,6 +10,7 @@ type UsePlayLogsParams = {
   endDate: string
   songName: string
   artist: string
+  scoreImproved: boolean
 }
 
 export function usePlayLogs({
@@ -18,6 +19,7 @@ export function usePlayLogs({
   endDate,
   songName,
   artist,
+  scoreImproved,
 }: UsePlayLogsParams) {
   const [rows, setRows] = useState<PlayLogRow[]>([])
   const [total, setTotal] = useState(0)
@@ -34,6 +36,7 @@ export function usePlayLogs({
         endDate: endDate || null,
         songName: songName || null,
         artist: artist || null,
+        scoreImproved,
       })
 
       if (cancelled) return
@@ -47,7 +50,7 @@ export function usePlayLogs({
     return () => {
       cancelled = true
     }
-  }, [page, startDate, endDate, songName, artist, reloadKey])
+  }, [page, startDate, endDate, songName, artist, scoreImproved, reloadKey])
 
   const refresh = useCallback(() => {
     setReloadKey((current) => current + 1)
