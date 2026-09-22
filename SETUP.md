@@ -1,20 +1,103 @@
-# SDVX PlayLog Tool セットアップ手順
+# <img src="asset/tray_icon.png" width="34" align="absmiddle"> SDVX PlayLog Tool
 
-## 1. 前提ソフトウェア
+<p align="center">
+  <strong>⚡ Setup Guide</strong>
+</p>
+
+<p align="center">
+  SDVX PlayLog ToolをWindows環境にセットアップするための手順です。
+</p>
+
+---
+
+## ✦ Setup Flow
+
+セットアップは以下の流れで行います。
+
+```text
+┌─────────────────────┐
+│ ① 前提ソフトウェア   │
+│ Python / uv / Node  │
+│ FFmpeg / OBS        │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ ② リポジトリ取得     │
+│ SDVX_PlayLog        │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ ③ setup.ps1         │
+│ 自動セットアップ     │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ ④ OBS Studio        │
+│ Scene / Replay / WS │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ ⑤ .env              │
+│ OBS Password        │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ ⑥ config.yaml       │
+│ 環境設定の確認       │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ ⑦ Backend 動作確認   │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ ⑧ Windows Startup   │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ ⑨ UI Installer      │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ ⑩ UI Install        │
+└──────────┬──────────┘
+           │
+           ▼
+       ✓ COMPLETE
+```
+
+---
+
+# 01 ── Prerequisites
+
+## ✦ 前提ソフトウェア
 
 以下のソフトウェアを事前にインストールしてください。
 
-* Python 3.12
-* uv
-* Node.js / npm
-* FFmpeg
-* OBS Studio
+| Software         | Required |
+| :--------------- | :------: |
+| 🐍 Python        |  `3.12`  |
+| 📦 uv            |     ✓    |
+| 🟢 Node.js / npm |     ✓    |
+| ⚙️ FFmpeg        |     ✓    |
+| 🎥 OBS Studio    |     ✓    |
 
 `setup.ps1` はこれらがインストール済みであることを確認します。
 
 ---
 
-## 2. リポジトリの取得
+# 02 ── Repository
+
+## ✦ リポジトリの取得
 
 リポジトリを任意の場所に配置してください。
 
@@ -28,7 +111,9 @@ C:\<任意の場所>\SDVX_PlayLog
 
 ---
 
-## 3. セットアップスクリプトの実行
+# 03 ── Automatic Setup
+
+## ✦ セットアップスクリプトの実行
 
 PowerShellでプロジェクトのルートディレクトリに移動します。
 
@@ -39,22 +124,24 @@ cd C:\<任意の場所>\SDVX_PlayLog
 セットアップスクリプトを実行します。
 
 ```powershell
-.\setup.ps1
+.\scripts\setup.ps1
 ```
 
-スクリプトによって以下が自動的に実行されます。
+### setup.ps1 が自動で行うこと
 
-* Python 3.12の確認
-* uvの確認
-* Python依存パッケージのセットアップ
-* Node.js / npmの確認
-* UI依存パッケージのセットアップ
-* `config.yaml`の作成
-* `.env`の作成
-* アプリケーションデータディレクトリの作成
-* 必要なテンプレート・アセットの確認
-* OBS Studioの確認
-* FFmpeg / FFprobeの確認
+```text
+✓ Python 3.12 の確認
+✓ uv の確認
+✓ Python依存パッケージのセットアップ
+✓ Node.js / npm の確認
+✓ UI依存パッケージのセットアップ
+✓ config.yaml の作成
+✓ .env の作成
+✓ アプリケーションデータディレクトリの作成
+✓ 必要なテンプレート・アセットの確認
+✓ OBS Studio の確認
+✓ FFmpeg / FFprobe の確認
+```
 
 `config.yaml`や`.env`が既に存在する場合、既存のファイルは上書きされません。
 
@@ -62,11 +149,13 @@ cd C:\<任意の場所>\SDVX_PlayLog
 
 ---
 
-## 4. OBS Studioの設定
+# 04 ── OBS Studio
+
+## ✦ OBS Studioの設定
 
 OBS Studioを起動し、以下を設定してください。
 
-### 4.1 シーン
+### 4.1 Scene
 
 以下の名前のシーンを作成してください。
 
@@ -90,14 +179,18 @@ OBS StudioのWebSocket設定を開き、WebSocketサーバーを有効にして�
 
 以下を設定します。
 
-* ポート：`4455`
-* パスワード：任意のパスワード
+| Setting  | Value    |
+| :------- | :------- |
+| Port     | `4455`   |
+| Password | 任意のパスワード |
 
 設定したパスワードは、次の手順で`.env`に設定します。
 
 ---
 
-## 5. `.env`の設定
+# 05 ── Environment
+
+## ✦ `.env`の設定
 
 プロジェクトルートの`.env`を開き、OBS WebSocketで設定したパスワードを指定してください。
 
@@ -107,9 +200,30 @@ OBS_WEBSOCKET_PASSWORD=設定したWebSocketパスワード
 
 `setup.ps1`によって`.env`が作成されている場合は、そのファイルを編集してください。
 
+### Configuration Flow
+
+```text
+┌──────────────────────┐
+│     OBS Studio       │
+│                      │
+│ WebSocket Password   │
+└──────────┬───────────┘
+           │
+           │ same password
+           ▼
+┌──────────────────────┐
+│        .env          │
+│                      │
+│ OBS_WEBSOCKET_       │
+│ PASSWORD=...         │
+└──────────────────────┘
+```
+
 ---
 
-## 6. `config.yaml`の確認
+# 06 ── Configuration
+
+## ✦ `config.yaml`の確認
 
 通常は`setup.ps1`によって自動作成された`config.yaml`をそのまま使用できます。
 
@@ -124,7 +238,9 @@ obs:
 
 ---
 
-## 7. Pythonバックエンドの動作確認
+# 07 ── Backend Check
+
+## ✦ Pythonバックエンドの動作確認
 
 プロジェクトルートで以下を実行します。
 
@@ -134,15 +250,19 @@ uv run python main.py
 
 以下を確認してください。
 
-* SDVX PlayLog Toolが起動する
-* システムトレイに常駐する
-* OBSとの接続が正常に行われる
+```text
+✓ SDVX PlayLog Toolが起動する
+✓ システムトレイに常駐する
+✓ OBSとの接続が正常に行われる
+```
 
 動作確認後、アプリを終了してください。
 
 ---
 
-## 8. PythonバックエンドをWindowsスタートアップに登録
+# 08 ── Windows Startup
+
+## ✦ PythonバックエンドをWindowsスタートアップに登録
 
 PythonバックエンドをWindowsへのログイン時に自動起動させる場合は、プロジェクトに含まれている以下のファイルを使用します。
 
@@ -150,7 +270,7 @@ PythonバックエンドをWindowsへのログイン時に自動起動させる�
 startup/start_backend.vbs
 ```
 
-Windowsのスタートアップフォルダーを開きます。
+### Startup Folderを開く
 
 `Win + R`を押し、以下を入力してください。
 
@@ -166,7 +286,9 @@ Enterキーを押します。
 
 ---
 
-## 9. UIインストーラーの作成
+# 09 ── UI Build
+
+## ✦ UIインストーラーの作成
 
 UIをインストールするためのインストーラーを作成する場合は、`ui`ディレクトリで以下を実行します。
 
@@ -182,7 +304,9 @@ ui/release/SDVX PlayLog Tool Setup <バージョン>.exe
 
 ---
 
-## 10. UIのインストール
+# 10 ── UI Installation
+
+## ✦ UIのインストール
 
 生成されたインストーラーを実行してください。
 
@@ -205,16 +329,30 @@ ui/release/SDVX PlayLog Tool Setup <バージョン>.exe
 
 ---
 
-## 11. 最終確認
+# 11 ── Final Check
+
+## ✦ 最終確認
 
 Windowsへのログイン後、以下を確認してください。
 
-1. Pythonバックエンドが自動起動する
-2. SDVX PlayLog Toolがシステムトレイに常駐する
-3. OBSとの接続が正常に行われる
-4. UIを起動できる
-5. SDVXをプレイする
-6. リザルトが自動的に記録される
-7. UIからプレイ履歴を確認できる
+```text
+☐ Pythonバックエンドが自動起動する
+☐ SDVX PlayLog Toolがシステムトレイに常駐する
+☐ OBSとの接続が正常に行われる
+☐ UIを起動できる
+☐ SDVXをプレイする
+☐ リザルトが自動的に記録される
+☐ UIからプレイ履歴を確認できる
+```
 
-以上でセットアップは完了です。
+---
+
+<div align="center">
+
+### ✓ Setup Complete
+
+**SDVX PlayLog Tool のセットアップは完了です。**
+
+`PLAY → RECORD → MANAGE → REPLAY`
+
+</div>
