@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from loguru import logger
 
-from app.excel.play_record import PlayRecordService
+from app.database.play_record import PlayRecordService
 from app.ocr.processor import OCRProcessor
 from app.result_detection.result_state import ResultState
 

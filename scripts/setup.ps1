@@ -224,5 +224,4 @@ Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  1. Configure OBS Studio."
 Write-Host "  2. Set OBS_WEBSOCKET_PASSWORD in .env."
 Write-Host "  3. Configure config.yaml if necessary."
-Write-Host "  4. See docs/40_セットアップ手順.md"
 Write-Host ""

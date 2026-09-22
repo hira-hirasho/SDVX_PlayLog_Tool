@@ -100,6 +100,3 @@ ocr:
 
 play_log:
   min_score: 9000000
-
-excel:
-  workbook_path: ""

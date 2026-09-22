@@ -62,7 +62,7 @@ class MediaProcessor:
             MediaProcessResult:
                 result.png / replay.mp4 の正式保存結果。
 
-        SQLite・Excelには一切アクセスしない。
+        メディア処理のみを担当し、プレイ記録の保存には関与しない。
         """
 
         media_dir = self._create_media_directory(

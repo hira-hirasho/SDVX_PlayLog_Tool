@@ -26,8 +26,7 @@ from app.core.single_instance import (
 from app.core.state import AppState
 from app.core.state_manager import StateManager
 from app.database.play_log import PlayLogDatabase
-from app.excel.play_log import PlayLogExcel
-from app.excel.play_record import PlayRecordService
+from app.database.play_record import PlayRecordService
 from app.media.job import MediaJob
 from app.media.job_runner import MediaJobRunner
 from app.media.processor import MediaProcessor
@@ -157,12 +156,6 @@ class SDVXPlayLogApp:
         # Play record
         # ------------------------------------------------------------
 
-        workbook_path = self._config.get(
-            "excel",
-            "workbook_path",
-            default="",
-        ).strip()
-
         min_score = self._config.get(
             "play_log",
             "min_score",
@@ -177,15 +170,8 @@ class SDVXPlayLogApp:
             database_path
         )
 
-        self._play_log_excel = (
-            PlayLogExcel(workbook_path)
-            if workbook_path
-            else None
-        )
-
         self._play_record_service = PlayRecordService(
             database=self._play_log_database,
-            excel=self._play_log_excel,
             min_score=min_score,
         )
 
