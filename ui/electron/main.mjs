@@ -3,7 +3,6 @@ import {
   BrowserWindow,
   ipcMain,
   Menu,
-  net,
   protocol,
   shell,
 } from 'electron'
@@ -17,6 +16,7 @@ import { getDataRoot } from './paths.mjs'
 import {
   getPlayLogs,
   updatePlayLog,
+  deletePlayLog,
 } from './db.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -115,6 +115,79 @@ if (!gotTheLock) {
   ipcMain.handle('play-log:update', (_event, playId, values) => {
       return updatePlayLog(playId, values)
   })
+
+  ipcMain.handle(
+    'play-log:delete',
+    async (_event, playId) => {
+      if (
+        typeof playId !== 'string' ||
+        !/^[0-9a-f-]+$/i.test(playId)
+      ) {
+        return {
+          deleted: false,
+          reason: 'invalid_play_id',
+        }
+      }
+
+      const mediaDir = path.join(
+        getDataRoot(),
+        'media',
+        playId,
+      )
+
+      /*
+       * SQLiteから対象プレイ記録を削除する。
+       */
+      try {
+        const sqliteResult =
+          deletePlayLog(playId)
+
+        if (!sqliteResult.deleted) {
+          return {
+            deleted: false,
+            reason: 'not_found',
+          }
+        }
+      } catch (error) {
+        console.error(
+          `Failed to delete SQLite record: ${playId}`,
+          error,
+        )
+
+        return {
+          deleted: false,
+          reason: 'sqlite_delete_failed',
+        }
+      }
+
+      /*
+       * プレイ単位のメディアディレクトリを
+       * Windowsのゴミ箱へ移動する。
+       *
+       * メディアが存在しない場合は、
+       * すでに削除済みとして処理を継続する。
+       */
+      try {
+        if (fs.existsSync(mediaDir)) {
+          await shell.trashItem(mediaDir)
+        }
+      } catch (error) {
+        console.error(
+          `Failed to move play media to trash: ${playId}`,
+          error,
+        )
+
+        return {
+          deleted: false,
+          reason: 'media_delete_failed',
+        }
+      }
+
+      return {
+        deleted: true,
+      }
+    },
+  )
 
   ipcMain.handle('play-log:get-media', (_event, playId) => {
     if (

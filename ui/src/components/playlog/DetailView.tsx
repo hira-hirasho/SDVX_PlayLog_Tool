@@ -40,6 +40,21 @@ export function DetailView({
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
+  const [
+    isRecordDeleteConfirmOpen,
+    setIsRecordDeleteConfirmOpen,
+  ] = useState(false)
+
+  const [
+    isDeletingRecord,
+    setIsDeletingRecord,
+  ] = useState(false)
+
+  const [
+    recordDeleteError,
+    setRecordDeleteError,
+  ] = useState<string | null>(null)
+
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false)
   const [imageZoom, setImageZoom] = useState(1)
   const [imageOffset, setImageOffset] = useState({ x: 0, y: 0 })
@@ -138,31 +153,68 @@ export function DetailView({
     }
   }
 
+  const handleDeleteRecord = async () => {
+    if (isDeletingRecord) return
+
+    setIsDeletingRecord(true)
+    setRecordDeleteError(null)
+
+    videoRef.current?.pause()
+
+    try {
+      const result =
+        await window.api.deletePlayRecord(
+          row.play_id,
+        )
+
+      if (!result.deleted) {
+        throw new Error(
+          result.reason ?? 'delete_failed',
+        )
+      }
+
+      setIsRecordDeleteConfirmOpen(false)
+
+      onBack()
+    } catch (error) {
+      console.error(
+        'Failed to delete play record:',
+        error,
+      )
+
+      setRecordDeleteError(
+        'プレイ記録を削除できませんでした。',
+      )
+    } finally {
+      setIsDeletingRecord(false)
+    }
+  }
+
   const requestDeleteMedia = (mediaType: MediaType) => {
     setMediaDeleteError(null)
     setDeleteTarget(mediaType)
   }
-  
+
   const handleDeleteMedia = async () => {
     if (!deleteTarget || isDeletingMedia) {
       return
     }
-  
+
     const mediaType = deleteTarget
 
     if (mediaType === 'replay') {
       videoRef.current?.pause()
     }
-  
+
     setIsDeletingMedia(true)
     setMediaDeleteError(null)
-  
+
     try {
       const result = await window.api.trashPlayMedia(
         row.play_id,
         mediaType,
       )
-  
+
       if (!result.trashed) {
         if (result.reason === 'not_found') {
           setMedia((current) => ({
@@ -174,21 +226,21 @@ export function DetailView({
           setDeleteTarget(null)
           return
         }
-  
+
         throw new Error(result.reason ?? 'trash_failed')
       }
-  
+
       setMedia((current) => ({
         ...current,
         ...(mediaType === 'result'
           ? { resultImage: null }
           : { replayVideo: null }),
       }))
-  
+
       if (mediaType === 'result') {
         setIsImagePreviewOpen(false)
       }
-  
+
       setDeleteTarget(null)
     } catch (error) {
       console.error('Failed to move media to trash:', error)
@@ -324,7 +376,7 @@ export function DetailView({
                   className="group relative h-11.5 translate-x-2.25 overflow-hidden border border-zinc-800 bg-[#070a10] px-5 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
                 >
                   <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
-                
+
                   <span className="flex h-full items-center gap-3">
                     <ArrowLeft
                       size={18}
@@ -375,7 +427,7 @@ export function DetailView({
                       className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-fuchsia-400/60 hover:text-fuchsia-300"
                     >
                       <span className="absolute left-0 top-0 h-px w-6 bg-fuchsia-400 transition-all group-hover:w-full" />
-                    
+
                       <span className="flex h-full items-center gap-3 px-5">
                         <span className="text-lg leading-none">✎</span>
                         EDIT
@@ -414,6 +466,25 @@ export function DetailView({
           {/* Record hero */}
           <section className="relative overflow-hidden border border-zinc-800 bg-[#060910]/95">
             <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-cyan-400/3 via-transparent to-fuchsia-500/4" />
+
+            {isEditing && (
+              <button
+                type="button"
+                aria-label="Delete play record"
+                title="Delete play record"
+                onClick={() => {
+                  setRecordDeleteError(null)
+                  setIsRecordDeleteConfirmOpen(true)
+                }}
+                disabled={isDeletingRecord}
+                className="absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center border border-red-500/30 bg-red-500/5 text-zinc-500 transition-colors hover:border-red-400/70 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Trash2
+                  size={17}
+                  strokeWidth={1.8}
+                />
+              </button>
+            )}
 
             <div className="pointer-events-none absolute right-0 top-0 h-full w-[38%] opacity-40 bg-[linear-gradient(135deg,transparent_0%,transparent_47%,rgba(34,211,238,0.12)_48%,transparent_49%,transparent_57%,rgba(217,70,239,0.10)_58%,transparent_59%)]" />
 
@@ -1133,6 +1204,70 @@ export function DetailView({
                 </div>,
                 document.body,
               )}
+              {isRecordDeleteConfirmOpen &&
+                createPortal(
+                  <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/75 px-6 backdrop-blur-sm">
+                    <div className="w-full max-w-md border border-zinc-700 bg-[#070a10] shadow-2xl">
+                      <div className="flex items-center gap-3 border-b border-zinc-800 px-6 py-4">
+                        <Trash2
+                          size={18}
+                          className="text-red-300"
+                        />
+
+                        <span className="font-mono text-sm tracking-[0.18em] text-zinc-200">
+                          DELETE PLAY RECORD
+                        </span>
+                      </div>
+
+                      <div className="px-6 py-6">
+                        <p className="font-mono text-sm text-zinc-200">
+                          {row.song_name ?? 'UNKNOWN SONG'}
+                        </p>
+
+                        <p className="mt-3 text-sm leading-6 text-zinc-400">
+                          このプレイ記録を削除しますか？
+                        </p>
+
+                        <p className="mt-2 text-xs leading-5 text-zinc-600">
+                          プレイ記録をデータベースから削除し、
+                          関連するメディアもWindowsのゴミ箱へ移動します。
+                        </p>
+
+                        {recordDeleteError && (
+                          <p className="mt-4 border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-300">
+                            {recordDeleteError}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex justify-end gap-3 border-t border-zinc-800 px-6 py-4">
+                        <button
+                          type="button"
+                          disabled={isDeletingRecord}
+                          onClick={() => {
+                            setIsRecordDeleteConfirmOpen(false)
+                            setRecordDeleteError(null)
+                          }}
+                          className="border border-zinc-800 px-4 py-2 font-mono text-xs tracking-[0.12em] text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          CANCEL
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isDeletingRecord}
+                          onClick={handleDeleteRecord}
+                          className="border border-red-400/50 bg-red-400/5 px-4 py-2 font-mono text-xs tracking-[0.12em] text-red-300 transition-colors hover:bg-red-400/10 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          {isDeletingRecord
+                            ? 'DELETING...'
+                            : 'DELETE'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>,
+                  document.body,
+                )}
         </main>
 
         <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-px bg-linear-to-r from-cyan-400/40 via-zinc-800 to-fuchsia-400/40" />

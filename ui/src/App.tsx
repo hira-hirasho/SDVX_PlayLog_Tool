@@ -1,4 +1,4 @@
-﻿import { useMemo } from 'react'
+import { useMemo } from 'react'
 
 import { ScoreCard } from './components/playlog/ScoreCard'
 import { PlayLogFilters } from './components/playlog/PlayLogFilters'
@@ -46,6 +46,11 @@ export default function App() {
     artist,
   })
 
+  const handleBack = () => {
+    goBack()
+    refresh()
+  }
+
   const totalPages = Math.ceil(total / pageSize)
 
   const selectedRow = useMemo(
@@ -53,12 +58,11 @@ export default function App() {
     [rows, selectedId],
   )
 
-
   if (selectedId && selectedRow) {
     return (
       <DetailView
         row={selectedRow}
-        onBack={goBack}
+        onBack={handleBack}
         onUpdated={refresh}
       />
     )

@@ -140,3 +140,24 @@ export function updatePlayLog(
     db.close()
   }
 }
+
+export function deletePlayLog(playId) {
+  const db = getDatabase()
+
+  try {
+    const result = db
+      .prepare(`
+        DELETE FROM play_log
+        WHERE play_id = @play_id
+      `)
+      .run({
+        play_id: playId,
+      })
+
+    return {
+      deleted: result.changes > 0,
+    }
+  } finally {
+    db.close()
+  }
+}

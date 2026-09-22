@@ -57,5 +57,12 @@ interface Window {
     ) => Promise<{
       updated: boolean
     }>
+
+    deletePlayRecord: (
+      playId: string,
+    ) => Promise<{
+      deleted: boolean
+      reason?: string
+    }>
   }
 }
