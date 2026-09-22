@@ -71,6 +71,10 @@ export function DetailView({
   const videoRef = useRef<HTMLVideoElement | null>(null)
 
   useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [row.play_id])
+
+  useEffect(() => {
     let cancelled = false
 
     const loadMedia = async () => {
