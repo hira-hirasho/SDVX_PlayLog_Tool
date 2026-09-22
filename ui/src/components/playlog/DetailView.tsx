@@ -165,6 +165,7 @@ export function DetailView({
       `【${row.song_name ?? '-'} / ${row.artist ?? '-'}】`,
       `Level: ${row.difficulty ?? '-'} ${row.level ?? '-'}`,
       `Score: ${scoreText}(${scoreDeltaText})`,
+      `#SDVX`,
     ].join('\n')
 
     const url =
