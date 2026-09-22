@@ -65,5 +65,19 @@ interface Window {
       deleted: boolean
       reason?: string
     }>
+
+    openExternal: (
+      url: string,
+    ) => Promise<{
+      opened: boolean
+      reason?: string
+    }>
+
+    openPlayMediaFolder: (
+      playId: string,
+    ) => Promise<{
+      opened: boolean
+      reason?: string
+    }>
   }
 }

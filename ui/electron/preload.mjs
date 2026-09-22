@@ -38,4 +38,16 @@ contextBridge.exposeInMainWorld('api', {
       'play-log:delete',
       playId,
     ),
+
+  openExternal: (url) =>
+    ipcRenderer.invoke(
+      'app\:open-external',
+      url,
+    ),
+
+  openPlayMediaFolder: (playId) =>
+    ipcRenderer.invoke(
+      'play-log\:open-media-folder',
+      playId,
+    ),
 })

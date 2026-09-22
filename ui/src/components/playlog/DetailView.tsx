@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, FolderOpen, Share2, Trash2 } from "lucide-react";
 
 import type { PlayLogRow } from '../../types/playLog'
 import { FxStyles } from '../effects/FxStyles'
@@ -154,6 +154,49 @@ export function DetailView({
       console.error('Failed to update play log:', error)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleShare = async () => {
+    const scoreText = formatScore(row.score)
+    const scoreDeltaText = formatDelta(row.score_delta)
+
+    const text = [
+      `【${row.song_name ?? '-'} / ${row.artist ?? '-'}】`,
+      `Level: ${row.difficulty ?? '-'} ${row.level ?? '-'}`,
+      `Score: ${scoreText}(${scoreDeltaText})`,
+    ].join('\n')
+
+    const url =
+      `https://x.com/intent/post?text=${encodeURIComponent(text)}`
+
+    const result = await window.api.openExternal(url)
+
+    if (!result.opened) {
+      console.error('Failed to open X post composer:', result.reason)
+      return
+    }
+
+    const mediaResult =
+      await window.api.openPlayMediaFolder(row.play_id)
+
+    if (!mediaResult.opened) {
+      console.error(
+        'Failed to open media folder:',
+        mediaResult.reason,
+      )
+    }
+  }
+
+  const handleOpenMediaFolder = async () => {
+    const result =
+      await window.api.openPlayMediaFolder(row.play_id)
+
+    if (!result.opened) {
+      console.error(
+        'Failed to open media folder:',
+        result.reason,
+      )
     }
   }
 
@@ -422,21 +465,57 @@ export function DetailView({
                   </div>
                 </div>
 
-                {/* EDIT / SAVE / CANCEL */}
+                {/* SHARE / MEDIA / EDIT / SAVE / CANCEL */}
                 <div className="flex shrink-0 items-center gap-3">
                   {!isEditing ? (
-                    <button
-                      type="button"
-                      onClick={startEditing}
-                      className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-fuchsia-400/60 hover:text-fuchsia-300"
-                    >
-                      <span className="absolute left-0 top-0 h-px w-6 bg-fuchsia-400 transition-all group-hover:w-full" />
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleShare}
+                        className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
+                      >
+                        <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
 
-                      <span className="flex h-full items-center gap-3 px-5">
-                        <span className="text-lg leading-none">✎</span>
-                        EDIT
-                      </span>
-                    </button>
+                        <span className="flex h-full items-center gap-3 px-5">
+                          <Share2
+                            size={17}
+                            strokeWidth={1.8}
+                            className="shrink-0"
+                          />
+                          SHARE
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleOpenMediaFolder}
+                        className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
+                      >
+                        <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
+
+                        <span className="flex h-full items-center gap-3 px-5">
+                          <FolderOpen
+                            size={17}
+                            strokeWidth={1.8}
+                            className="shrink-0"
+                          />
+                          MEDIA
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={startEditing}
+                        className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-fuchsia-400/60 hover:text-fuchsia-300"
+                      >
+                        <span className="absolute left-0 top-0 h-px w-6 bg-fuchsia-400 transition-all group-hover:w-full" />
+
+                        <span className="flex h-full items-center gap-3 px-5">
+                          <span className="text-lg leading-none">✎</span>
+                          EDIT
+                        </span>
+                      </button>
+                    </>
                   ) : (
                     <>
                       <button

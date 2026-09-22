@@ -189,6 +189,97 @@ if (!gotTheLock) {
     },
   )
 
+  ipcMain.handle(
+    'app\:open-external',
+    async (_event, url) => {
+      if (
+        typeof url !== 'string' ||
+        !/^https:\/\/(x\.com|twitter\.com)\//i.test(url)
+      ) {
+        return {
+          opened: false,
+          reason: 'invalid_url',
+        }
+      }
+
+      try {
+        await shell.openExternal(url)
+
+        return {
+          opened: true,
+        }
+      } catch (error) {
+        console.error(
+          `Failed to open external URL: ${url}`,
+          error,
+        )
+
+        return {
+          opened: false,
+          reason: 'open_failed',
+        }
+      }
+    },
+  )
+
+  ipcMain.handle(
+    'play-log\:open-media-folder',
+    async (_event, playId) => {
+      if (
+        typeof playId !== 'string' ||
+        !/^[0-9a-f-]+$/i.test(playId)
+      ) {
+        return {
+          opened: false,
+          reason: 'invalid_play_id',
+        }
+      }
+
+      const mediaDir = path.join(
+        getDataRoot(),
+        'media',
+        playId,
+      )
+
+      if (!fs.existsSync(mediaDir)) {
+        return {
+          opened: false,
+          reason: 'not_found',
+        }
+      }
+
+      try {
+        const result = await shell.openPath(mediaDir)
+
+        if (result) {
+          console.error(
+            `Failed to open media folder: ${mediaDir}`,
+            result,
+          )
+
+          return {
+            opened: false,
+            reason: 'open_failed',
+          }
+        }
+
+        return {
+          opened: true,
+        }
+      } catch (error) {
+        console.error(
+          `Failed to open media folder: ${mediaDir}`,
+          error,
+        )
+
+        return {
+          opened: false,
+          reason: 'open_failed',
+        }
+      }
+    },
+  )
+
   ipcMain.handle('play-log:get-media', (_event, playId) => {
     if (
       typeof playId !== 'string' ||
