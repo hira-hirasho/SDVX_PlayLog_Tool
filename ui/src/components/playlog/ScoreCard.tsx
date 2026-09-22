@@ -58,11 +58,39 @@ export function ScoreCard({
           TRACK
         </div>
 
-        <div
-          className="min-h-5 truncate text-sm font-semibold text-zinc-100"
-          title={row.song_name ?? ''}
-        >
-          {row.song_name ?? '\u00A0'}
+        <div className="flex min-w-0 items-center gap-2">
+          <div
+            className="min-w-0 flex-1 truncate text-sm font-semibold text-zinc-100"
+            title={row.song_name ?? ''}
+          >
+            {row.song_name ?? '\u00A0'}
+          </div>
+
+          {row.has_replay_video && (
+            <span
+              className="flex h-6 w-6 shrink-0 translate-y-px items-center justify-center text-cyan-400"
+              title="リプレイ動画保存済み"
+              aria-label="リプレイ動画保存済み"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-6 w-6"
+                aria-hidden="true"
+              >
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <path
+                  d="m10 8 5 4-5 4z"
+                  fill="currentColor"
+                  stroke="none"
+                />
+              </svg>
+            </span>
+          )}
         </div>
 
         <div

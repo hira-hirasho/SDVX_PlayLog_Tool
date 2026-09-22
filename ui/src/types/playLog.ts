@@ -9,4 +9,10 @@ export type PlayLogRow = {
   score_delta: number | null
   ex_score: number | null
   ex_score_delta: number | null
+  has_replay_video: boolean
+}
+
+export type PlayLogListResult = {
+  rows: PlayLogRow[]
+  total: number
 }

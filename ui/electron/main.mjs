@@ -109,7 +109,26 @@ if (!gotTheLock) {
   }
 
   ipcMain.handle('play-log:get-list', (_event, options) => {
-    return getPlayLogs(options)
+    const result = getPlayLogs(options)
+
+    const rows = result.rows.map((row) => {
+      const replayPath = path.join(
+        getDataRoot(),
+        'media',
+        row.play_id,
+        'replay.mp4',
+      )
+
+      return {
+        ...row,
+        has_replay_video: fs.existsSync(replayPath),
+      }
+    })
+
+    return {
+      ...result,
+      rows,
+    }
   })
 
   ipcMain.handle('play-log:update', (_event, playId, values) => {
