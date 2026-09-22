@@ -17,6 +17,7 @@ result_detection:
   template_path: "templates/result_screen.png"
   threshold: 0.85
   interval_seconds: 1.0
+  scale: 0.25
   region:
     x: 1666
     y: 584

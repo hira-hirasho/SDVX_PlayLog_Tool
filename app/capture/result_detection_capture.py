@@ -33,19 +33,20 @@ class ResultDetectionCapture:
         self._width = width
         self._height = height
 
-    def capture(self) -> np.ndarray:
+    def capture_detection_region(self) -> np.ndarray:
         """
-        Windows画面からリザルト判定用ROIを取得する。
-
-        後方互換用のメソッド。
-        通常のResultMonitorではcapture_full_screen()を使用する。
+        Windows画面からリザルト判定用ROIだけをキャプチャする。
         """
-
-        image = self.capture_full_screen()
-
-        return self.extract_detection_region(
-            image
+        image = ImageGrab.grab(
+            bbox=(
+                self._x,
+                self._y,
+                self._x + self._width,
+                self._y + self._height,
+            ),
+            all_screens=True,
         )
+        return np.asarray(image)
 
     def capture_full_screen(self) -> np.ndarray:
         """
@@ -66,45 +67,6 @@ class ResultDetectionCapture:
         )
 
         return np.asarray(image)
-
-    def extract_detection_region(
-        self,
-        image: np.ndarray,
-    ) -> np.ndarray:
-        """
-        フルスクリーンキャプチャからリザルト判定用ROIを切り出す。
-
-        引数imageはcapture_full_screen()で取得した画像を想定する。
-        """
-
-        if image.ndim < 2:
-            raise ValueError(
-                "Captured image must have at least 2 dimensions"
-            )
-
-        image_height, image_width = image.shape[:2]
-
-        left = self._x
-        top = self._y
-        right = self._x + self._width
-        bottom = self._y + self._height
-
-        if left < 0 or top < 0:
-            raise ValueError(
-                "Detection region coordinates must be >= 0"
-            )
-
-        if right > image_width or bottom > image_height:
-            raise ValueError(
-                "Detection region exceeds captured image bounds: "
-                f"region=({left}, {top}, {right}, {bottom}) "
-                f"image={image_width}x{image_height}"
-            )
-
-        return image[
-            top:bottom,
-            left:right,
-        ]
 
     def create_result_image(
         self,

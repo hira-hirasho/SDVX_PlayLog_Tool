@@ -127,8 +127,6 @@ class SongStartMonitor:
 
         detected_at = time.monotonic()
 
-        self._stop_event.set()
-
         if self._on_detected is not None:
             self._on_detected(
                 detected_at

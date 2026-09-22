@@ -143,51 +143,21 @@ class ResultMonitor:
         """
         1回の監視処理を実行する。
 
-        重要:
-            リザルト判定とResultState保存用画像には
-            必ず同一のフルスクリーンキャプチャを使用する。
+        通常のリザルト判定ではROIだけをキャプチャする。
+        リザルト画面への初回突入を検知したときだけ、
+        フルスクリーンを1回キャプチャして保存用画像を生成する。
         """
-
-        capture_started_at = time.monotonic()
-
-        # ------------------------------------------------------------
-        # 1. フルスクリーンを1回だけキャプチャ
-        # ------------------------------------------------------------
-
-        full_screen_image = (
-            self._detection_capture.capture_full_screen()
-        )
-
-        capture_elapsed = (
-            time.monotonic()
-            - capture_started_at
-        )
-
-        logger.debug(
-            "RESULT: full-screen capture completed "
-            f"(elapsed={capture_elapsed:.4f}s)"
-        )
-
-        # ------------------------------------------------------------
-        # 2. 同じキャプチャからROIを切り出して判定
-        # ------------------------------------------------------------
-
         detection_image = (
-            self._detection_capture.extract_detection_region(
-                full_screen_image
-            )
+            self._detection_capture.capture_detection_region()
         )
-
         detected = self._detector.is_result_screen(
             detection_image
         )
-
         current_state = self.current_state
 
         # ------------------------------------------------------------
         # ResultStateが存在しない場合
         # ------------------------------------------------------------
-
         if current_state is None:
             if not detected:
                 return
@@ -196,19 +166,21 @@ class ResultMonitor:
                 "RESULT: result screen detected"
             )
 
+            # リザルト突入を検知した瞬間だけ
+            # フルスクリーンを1回キャプチャする。
+            full_screen_image = (
+                self._detection_capture.capture_full_screen()
+            )
+
             self._enter_result(
                 full_screen_image
             )
-
             return
 
         # ------------------------------------------------------------
         # ResultStateが存在する場合
         # ------------------------------------------------------------
-
         if detected:
-            # リザルト画面が継続して表示されている。
-            # 一時的な未検知があった場合もここでカウンタをリセットする。
             if self._consecutive_missed_checks > 0:
                 logger.debug(
                     "RESULT: result screen detected again; "
@@ -218,13 +190,11 @@ class ResultMonitor:
                 )
 
             self._consecutive_missed_checks = 0
-
             return
 
         # ------------------------------------------------------------
         # リザルト画面が検知されなかった
         # ------------------------------------------------------------
-
         self._consecutive_missed_checks += 1
 
         logger.debug(
@@ -258,9 +228,8 @@ class ResultMonitor:
     ) -> None:
         """
         リザルト画面への進入処理。
-
-        引数のfull_screen_imageは、リザルト検知に使用した
-        同一キャプチャである。
+        引数のfull_screen_imageは、
+        リザルト突入検知直後に取得したフルスクリーンキャプチャである。
         """
 
         detected_at = datetime.now()

@@ -39,7 +39,7 @@ class ResultScreenDetector:
             self._config.get(
                 "result_detection",
                 "scale",
-                default=0.25,
+                default=1.0,
             )
         )
         if self._scale <= 0:
