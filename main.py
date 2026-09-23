@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import io
+import math
 import time
+import wave
+import winsound
 
 from pathlib import Path
 from threading import Lock, Thread
@@ -920,6 +924,8 @@ class SDVXPlayLogApp:
                 replay_elapsed_seconds,
             )
 
+            self._play_f12_sound()
+
         except Exception:
             logger.exception(
                 "F12: failed to create media job: play_id={}",
@@ -933,6 +939,89 @@ class SDVXPlayLogApp:
     # ================================================================
     # Helpers
     # ================================================================
+
+    def _play_f12_sound(self) -> None:
+        """F12による保存受付完了時のサウンドを非同期再生する。"""
+        Thread(
+            target=self._generate_and_play_f12_sound,
+            name="F12Sound",
+            daemon=True,
+        ).start()
+
+    @staticmethod
+    def _generate_and_play_f12_sound() -> None:
+        """F12サウンドを生成して再生する。"""
+        rate = 44100
+        volume = 0.022
+
+        chords = [
+            ([261.63, 392.00, 523.25], 70, 0.9, 0.10),
+            ([392.00, 493.88, 587.33, 783.99], 185, 0.95, 0.12),
+        ]
+
+        data = bytearray()
+
+        for freqs, duration_ms, chord_volume, harmonic in chords:
+            sample_count = int(rate * duration_ms / 1000)
+
+            for i in range(sample_count):
+                t = i / rate
+
+                value = sum(
+                    math.sin(2 * math.pi * freq * t)
+                    for freq in freqs
+                ) / len(freqs)
+
+                value += harmonic * math.sin(
+                    2 * math.pi * max(freqs) * 2 * t
+                )
+
+                attack = min(
+                    1.0,
+                    i / (rate * 0.004),
+                )
+
+                release = min(
+                    1.0,
+                    (sample_count - i) / (rate * 0.050),
+                )
+
+                value *= (
+                    volume
+                    * chord_volume
+                    * attack
+                    * release
+                )
+
+                sample = max(
+                    -1.0,
+                    min(1.0, value),
+                )
+
+                data += int(
+                    sample * 32767
+                ).to_bytes(
+                    2,
+                    "little",
+                    signed=True,
+                )
+
+            data += b"\x00\x00" * int(
+                rate * 0.035
+            )
+
+        buffer = io.BytesIO()
+
+        with wave.open(buffer, "wb") as wav:
+            wav.setnchannels(1)
+            wav.setsampwidth(2)
+            wav.setframerate(rate)
+            wav.writeframes(data)
+
+        winsound.PlaySound(
+            buffer.getvalue(),
+            winsound.SND_MEMORY,
+        )
 
     def _on_media_job_completed(self) -> None:
         """MediaJob完了後に必要なアプリケーション処理を行う。"""
