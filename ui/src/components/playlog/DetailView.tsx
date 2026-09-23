@@ -1,9 +1,10 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, FolderOpen, Share2, Trash2 } from "lucide-react"
+import { FolderOpen, Share2, Trash2 } from "lucide-react"
 
 import type { PlayLogRow } from '../../types/playLog'
-import { FxStyles } from '../effects/FxStyles'
+import { SystemBackground } from '../effects/SystemBackground'
+import { SystemPageHeader } from '../layout/SystemPageHeader'
 import { SystemSidebar } from '../layout/SystemSidebar'
 
 import {
@@ -314,194 +315,89 @@ export function DetailView({
       />
 
       <div className="plg-page-in relative min-h-screen overflow-hidden bg-[#03050a] text-zinc-100">
-        <FxStyles />
-
-        {/* Global animated atmosphere */}
-        <div className="plg-grid-anim pointer-events-none fixed inset-0 opacity-20 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-size-[40px_40px]" />
-
-        {/* Deep ambient light field */}
-        <div className="pointer-events-none fixed inset-0 overflow-hidden">
-          <div className="plg-ambient-cyan absolute left-[-20%] top-[-25%] h-[90vh] w-[90vw] rounded-full bg-cyan-400/20 blur-[160px]" />
-
-          <div className="plg-ambient-magenta absolute bottom-[-25%] right-[-20%] h-[85vh] w-[85vw] rounded-full bg-fuchsia-500/15 blur-[150px]" />
-
-          {/* Central depth field */}
-          <div className="plg-depth-pulse absolute left-1/2 top-1/2 h-[65vh] w-[65vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/5 blur-[110px]" />
-
-          {/* Very slow orbital atmosphere */}
-          <div className="plg-orbit absolute left-1/2 top-1/2 h-[75vh] w-[75vw] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/5" />
-        </div>
-
-        {/* Soft vertical system scan */}
-        <div className="plg-scan-line pointer-events-none fixed inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/40 to-transparent blur-[1px]" />
-
-        {/* Edge atmosphere */}
-        <div className="pointer-events-none fixed inset-0 bg-linear-to-br from-cyan-400/2 via-transparent to-fuchsia-500/3" />
-
-        <div className="pointer-events-none fixed left-0 top-0 h-screen w-px bg-linear-to-b from-cyan-400 via-cyan-400/20 to-transparent" />
-
-        <div className="pointer-events-none fixed right-0 top-0 h-screen w-px bg-linear-to-b from-fuchsia-500 via-fuchsia-500/20 to-transparent" />
-
-        {/* Animated background energy field */}
-        <div className="pointer-events-none fixed inset-0 overflow-hidden">
-          {/* Moving cyan atmosphere */}
-          <div className="plg-orb-cyan absolute left-[-15%] top-[-15%] h-[70vh] w-[70vw] rounded-full bg-cyan-400/20 blur-[140px]" />
-
-          {/* Moving magenta atmosphere */}
-          <div className="plg-orb-magenta absolute right-[-15%] bottom-[-15%] h-[65vh] w-[65vw] rounded-full bg-fuchsia-500/20 blur-[130px]" />
-
-          {/* Horizontal energy sweep */}
-          <div className="plg-energy-line absolute left-0 top-[28%] h-px w-[75vw] bg-linear-to-r from-transparent via-cyan-300/70 to-transparent blur-[1px]" />
-
-          {/* Reverse energy sweep */}
-          <div className="plg-energy-line-reverse absolute right-0 top-[68%] h-px w-[80vw] bg-linear-to-r from-transparent via-fuchsia-400/60 to-transparent blur-[1px]" />
-
-          {/* Fast vertical scan */}
-          <div className="plg-scan-line-fast absolute left-[28%] top-0 h-px w-[45vw] rotate-90 bg-linear-to-r from-transparent via-cyan-300/60 to-transparent blur-[1px]" />
-
-          {/* Secondary vertical scan */}
-          <div className="plg-scan-line-fast absolute right-[22%] top-0 h-px w-[38vw] rotate-90 bg-linear-to-r from-transparent via-fuchsia-300/50 to-transparent blur-[1px]" />
-        </div>
+        <SystemBackground />
 
         <div className="relative lg:pl-18">
           {/* Header */}
-          <header className="relative overflow-hidden border-b border-zinc-900 bg-[#060910]/95">
-            <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-cyan-400 via-fuchsia-500 to-transparent shadow-[0_0_10px_rgba(34,211,238,0.4)]" />
-
-            <div className="absolute left-0 top-0 h-20 w-[32%] opacity-30 bg-[linear-gradient(135deg,transparent_0%,transparent_47%,rgba(34,211,238,0.16)_48%,transparent_49%,transparent_58%,rgba(34,211,238,0.07)_59%,transparent_60%)]" />
-
-            <div className="absolute right-0 top-0 h-full w-[45%] opacity-30 bg-[linear-gradient(135deg,transparent_0%,transparent_48%,rgba(34,211,238,0.15)_49%,transparent_50%,transparent_58%,rgba(217,70,239,0.12)_59%,transparent_60%)]" />
-
-            <div className="flex items-center">
-              <div className="w-[calc((100%-1600px)/2)] shrink-0 pl-6">
-                {!isEditing && (
+          <SystemPageHeader
+            label="RECORD DETAIL"
+            onBack={onBack}
+            showBackButton={!isEditing}
+            actions={
+              !isEditing ? (
+                <>
                   <button
                     type="button"
-                    onClick={onBack}
-                    className="group relative h-11.5 translate-x-2.25 overflow-hidden border border-zinc-800 bg-[#070a10] px-5 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
+                    onClick={handleShare}
+                    className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
                   >
                     <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
 
-                    <span className="flex h-full items-center gap-3">
-                      <ArrowLeft
-                        size={18}
-                        strokeWidth={2}
-                        className="shrink-0 transition-transform group-hover:-translate-x-1"
+                    <span className="flex h-full items-center gap-3 px-5">
+                      <Share2
+                        size={17}
+                        strokeWidth={1.8}
+                        className="shrink-0"
                       />
-                      <span className="leading-none">HISTORY</span>
+                      SHARE
                     </span>
                   </button>
-                )}
-              </div>
 
-              <div className="mx-auto w-full max-w-[1600px] px-6 py-6">
-                <div className="flex items-center justify-between gap-6">
-                  {/* タイトルロゴ */}
-                  <div>
-                    <div className="mb-2 flex items-center gap-3">
-                      <span className="h-px w-8 bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.5)]" />
+                  <button
+                    type="button"
+                    onClick={handleOpenMediaFolder}
+                    className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
+                  >
+                    <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
 
-                      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.38em] text-cyan-300/80">
-                        SOUND VOLTEX
+                    <span className="flex h-full items-center gap-3 px-5">
+                      <FolderOpen
+                        size={17}
+                        strokeWidth={1.8}
+                        className="shrink-0"
+                      />
+                      MEDIA
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={startEditing}
+                    className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-fuchsia-400/60 hover:text-fuchsia-300"
+                  >
+                    <span className="absolute left-0 top-0 h-px w-6 bg-fuchsia-400 transition-all group-hover:w-full" />
+
+                    <span className="flex h-full items-center gap-3 px-5">
+                      <span className="text-lg leading-none">
+                        ✎
                       </span>
+                      EDIT
+                    </span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={saveEditing}
+                    disabled={isSaving}
+                    className="group relative h-11.5 overflow-hidden border border-cyan-400/60 bg-[#070a10] px-5 font-mono text-xs font-bold uppercase tracking-[0.18em] text-cyan-300 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    SAVE
+                  </button>
 
-                      <span className="h-1 w-1 bg-fuchsia-400" />
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono text-2xl font-black italic uppercase tracking-[0.12em] text-white sm:text-3xl">
-                        <span className="text-cyan-300">SDVX</span>
-                        <span className="mx-2 text-zinc-700">/</span>
-                        PLAYLOG
-                      </span>
-
-                      <span className="hidden h-px w-12 bg-fuchsia-400/60 sm:block" />
-
-                      <span className="hidden font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-fuchsia-300 sm:block">
-                        RECORD DETAIL
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* SHARE / MEDIA / EDIT / SAVE / CANCEL */}
-                  <div className="flex shrink-0 items-center gap-3">
-                    {!isEditing ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={handleShare}
-                          className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
-                        >
-                          <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
-
-                          <span className="flex h-full items-center gap-3 px-5">
-                            <Share2
-                              size={17}
-                              strokeWidth={1.8}
-                              className="shrink-0"
-                            />
-                            SHARE
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={handleOpenMediaFolder}
-                          className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
-                        >
-                          <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
-
-                          <span className="flex h-full items-center gap-3 px-5">
-                            <FolderOpen
-                              size={17}
-                              strokeWidth={1.8}
-                              className="shrink-0"
-                            />
-                            MEDIA
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={startEditing}
-                          className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-fuchsia-400/60 hover:text-fuchsia-300"
-                        >
-                          <span className="absolute left-0 top-0 h-px w-6 bg-fuchsia-400 transition-all group-hover:w-full" />
-
-                          <span className="flex h-full items-center gap-3 px-5">
-                            <span className="text-lg leading-none">✎</span>
-                            EDIT
-                          </span>
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={saveEditing}
-                          disabled={isSaving}
-                          className="group relative h-11.5 overflow-hidden border border-cyan-400/60 bg-[#070a10] px-5 font-mono text-xs font-bold uppercase tracking-[0.18em] text-cyan-300 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          SAVE
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={cancelEditing}
-                          disabled={isSaving}
-                          className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] px-5 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          CANCEL
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-cyan-400/60 via-zinc-800 to-fuchsia-400/40" />
-          </header>
+                  <button
+                    type="button"
+                    onClick={cancelEditing}
+                    disabled={isSaving}
+                    className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] px-5 font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    CANCEL
+                  </button>
+                </>
+              )
+            }
+          />
 
           <main className="relative mx-auto max-w-325 px-6 py-6">
             {/* Record hero */}
