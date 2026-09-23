@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 import { FolderOpen, Keyboard, Save } from 'lucide-react'
 
@@ -16,7 +16,6 @@ type Region = {
 type Config = {
   input: {
     trigger_key: string
-    debounce_seconds: number
   }
   obs: {
     executable_path: string
@@ -39,13 +38,7 @@ type Config = {
     scale: number
     region: Region
   }
-  replay: {
-    detection_timeout_seconds: number
-    stability_checks: number
-    stability_interval_seconds: number
-  }
   ocr: {
-    max_attempts: number
     regions: {
       song_name: Region
       artist: Region
@@ -83,7 +76,7 @@ function NumberInput({
       type="number"
       value={value}
       onChange={(event) => onChange(Number(event.target.value))}
-      className="w-full border border-zinc-800 bg-[#05080d] px-3 py-2.5 font-mono text-xs text-zinc-200 outline-none transition focus:border-cyan-400/60"
+      className="w-full border border-zinc-800 bg-[#05080d] px-3.5 py-3 font-mono text-sm text-zinc-200 outline-none transition focus:border-cyan-400/60"
     />
   )
 }
@@ -100,7 +93,7 @@ function TextInput({
       type="text"
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="w-full border border-zinc-800 bg-[#05080d] px-3 py-2.5 font-mono text-xs text-zinc-200 outline-none transition focus:border-cyan-400/60"
+      className="w-full border border-zinc-800 bg-[#05080d] px-3.5 py-3 font-mono text-sm text-zinc-200 outline-none transition focus:border-cyan-400/60"
     />
   )
 }
@@ -111,9 +104,17 @@ function SettingLabel({
   children: React.ReactNode
 }) {
   return (
-    <span className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-500">
+    <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">
       {children}
     </span>
+  )
+}
+
+function SettingHint({ children }: { children: ReactNode }) {
+  return (
+    <p className="font-mono text-[11px] leading-relaxed tracking-[0.04em] text-zinc-500">
+      {children}
+    </p>
   )
 }
 
@@ -131,19 +132,19 @@ function SettingCard({
       <div className="border-b border-zinc-900 px-5 py-4">
         <div className="flex items-center gap-3">
           <span className="h-px w-6 bg-cyan-400" />
-          <h2 className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-zinc-300">
+          <h2 className="font-mono text-sm font-bold uppercase tracking-[0.18em] text-zinc-300">
             {title}
           </h2>
         </div>
 
         {description && (
-          <p className="mt-2 pl-9 font-mono text-[9px] uppercase tracking-[0.12em] text-zinc-700">
+          <p className="mt-2 pl-9 font-mono text-[11px] uppercase tracking-[0.08em] text-zinc-600">
             {description}
           </p>
         )}
       </div>
 
-      <div className="p-5">{children}</div>
+      <div className="p-6">{children}</div>
     </section>
   )
 }
@@ -167,12 +168,12 @@ function PathInput({
       <button
         type="button"
         onClick={onBrowse}
-        className="group relative flex shrink-0 items-center gap-2 border border-zinc-800 bg-[#070a10] px-4 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-500 transition hover:border-cyan-400/60 hover:text-cyan-300"
+        className="group relative flex shrink-0 items-center gap-2 border border-zinc-800 bg-[#070a10] px-5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-500 transition hover:border-cyan-400/60 hover:text-cyan-300"
       >
         <span className="absolute left-0 top-0 h-px w-4 bg-cyan-400 transition-all group-hover:w-full" />
 
         <FolderOpen
-          size={14}
+          size={16}
           strokeWidth={1.8}
         />
 
@@ -194,14 +195,14 @@ function KeyInput({
   return (
     <div className="flex gap-2">
       <div
-        className={`flex min-w-0 flex-1 items-center border px-3 py-2.5 font-mono text-xs ${
+        className={`flex min-w-0 flex-1 items-center border px-3.5 py-3 font-mono text-sm ${
           listening
             ? 'border-cyan-400/70 bg-cyan-400/5 text-cyan-300'
             : 'border-zinc-800 bg-[#05080d] text-zinc-300'
         }`}
       >
         <Keyboard
-          size={14}
+          size={16}
           strokeWidth={1.8}
           className="mr-2 shrink-0 text-zinc-600"
         />
@@ -215,7 +216,7 @@ function KeyInput({
         type="button"
         onClick={onStart}
         disabled={listening}
-        className="group relative shrink-0 border border-zinc-800 bg-[#070a10] px-4 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-500 transition hover:border-cyan-400/60 hover:text-cyan-300 disabled:cursor-wait disabled:border-cyan-400/40 disabled:text-cyan-300"
+        className="group relative shrink-0 border border-zinc-800 bg-[#070a10] px-5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-500 transition hover:border-cyan-400/60 hover:text-cyan-300 disabled:cursor-wait disabled:border-cyan-400/40 disabled:text-cyan-300"
       >
         <span className="absolute left-0 top-0 h-px w-4 bg-cyan-400 transition-all group-hover:w-full" />
 
@@ -249,14 +250,14 @@ function RegionEditor({
       <div className="mb-4 flex items-center gap-3">
         <span className="h-1 w-1 bg-cyan-400" />
 
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+        <span className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
           {title}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <label className="space-y-1">
-          <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-600">
+          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-zinc-600">
             X
           </span>
 
@@ -267,7 +268,7 @@ function RegionEditor({
         </label>
 
         <label className="space-y-1">
-          <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-600">
+          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-zinc-600">
             Y
           </span>
 
@@ -278,7 +279,7 @@ function RegionEditor({
         </label>
 
         <label className="space-y-1">
-          <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-600">
+          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-zinc-600">
             WIDTH
           </span>
 
@@ -289,7 +290,7 @@ function RegionEditor({
         </label>
 
         <label className="space-y-1">
-          <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-600">
+          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-zinc-600">
             HEIGHT
           </span>
 
@@ -325,14 +326,14 @@ function TabButton({
       }`}
     >
       <span
-        className={`text-[9px] font-bold tracking-[0.16em] ${
+        className={`text-[11px] font-bold tracking-[0.16em] ${
           active ? 'text-cyan-400' : 'text-zinc-700'
         }`}
       >
         {index}
       </span>
 
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em]">
+      <span className="text-xs font-bold uppercase tracking-[0.2em]">
         {label}
       </span>
 
@@ -534,7 +535,7 @@ export function SettingsView({
           <div className="mx-auto max-w-350 px-6 py-6">
             {loading ? (
               <div className="flex min-h-[calc(100vh-120px)] items-center justify-center">
-                <span className="font-mono text-xs font-bold uppercase tracking-[0.25em] text-cyan-400">
+                <span className="font-mono text-sm font-bold uppercase tracking-[0.25em] text-cyan-400">
                   LOADING SETTINGS...
                 </span>
               </div>
@@ -591,10 +592,9 @@ export function SettingsView({
                             }}
                           />
 
-                          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-zinc-700">
-                            Press SET KEY, then press the desired key.
-                            ESC cancels.
-                          </p>
+                          <SettingHint>
+                            リザルト画面で押下することでプレイ動画を保存します。ESCキーで設定をキャンセルします。
+                          </SettingHint>
                         </label>
 
                         <label className="space-y-2">
@@ -614,6 +614,10 @@ export function SettingsView({
                               }))
                             }
                           />
+
+                          <SettingHint>
+                            自動でプレイ記録を保存するスコアの下限です。
+                          </SettingHint>
                         </label>
                       </div>
                     </SettingCard>
@@ -637,6 +641,10 @@ export function SettingsView({
                               )
                             }
                           />
+
+                          <SettingHint>
+                            OBS Studioの実行ファイルの場所です。OBSを通常と異なる場所にインストールした場合のみ変更してください。
+                          </SettingHint>
                         </label>
 
                         <label className="block space-y-2">
@@ -656,6 +664,10 @@ export function SettingsView({
                               }))
                             }
                           />
+
+                          <SettingHint>
+                            Replay Bufferの録画に使用するOBSシーン名です。OBS側でシーン名を変更した場合は、ここも同じ名前にしてください。
+                          </SettingHint>
                         </label>
                       </div>
                     </SettingCard>
@@ -665,36 +677,10 @@ export function SettingsView({
                 {activeTab === 'advanced' && (
                   <div className="space-y-5">
                     <SettingCard
-                      title="INPUT"
-                      description="Input timing"
-                    >
-                      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                        <label className="space-y-2">
-                          <SettingLabel>
-                            Debounce Seconds
-                          </SettingLabel>
-
-                          <NumberInput
-                            value={config.input.debounce_seconds}
-                            onChange={(value) =>
-                              updateConfig((current) => ({
-                                ...current,
-                                input: {
-                                  ...current.input,
-                                  debounce_seconds: value,
-                                },
-                              }))
-                            }
-                          />
-                        </label>
-                      </div>
-                    </SettingCard>
-
-                    <SettingCard
                       title="OBS WEBSOCKET"
                       description="OBS WebSocket connection parameters"
                     >
-                      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         <label className="space-y-2">
                           <SettingLabel>
                             Host
@@ -715,6 +701,11 @@ export function SettingsView({
                               }))
                             }
                           />
+
+                          <SettingHint>
+                            OBS WebSocketへ接続するホスト名です。<br></br>
+                            OBSと同じPCで使用する場合は通常変更不要です。
+                          </SettingHint>
                         </label>
 
                         <label className="space-y-2">
@@ -737,6 +728,11 @@ export function SettingsView({
                               }))
                             }
                           />
+
+                          <SettingHint>
+                            OBS WebSocketの接続ポートです。<br></br>
+                            OBSのWebSocket設定でポートを変更した場合に、同じ値に変更してください。
+                          </SettingHint>
                         </label>
 
                         <label className="space-y-2">
@@ -761,6 +757,11 @@ export function SettingsView({
                               }))
                             }
                           />
+
+                          <SettingHint>
+                            OBS WebSocketへの接続・応答を待つ最大時間です。<br></br>
+                            OBSの起動直後に接続タイムアウトが発生する場合は値を大きくしてください。
+                          </SettingHint>
                         </label>
                       </div>
                     </SettingCard>
@@ -769,7 +770,7 @@ export function SettingsView({
                       title="RESULT DETECTION"
                       description="Result screen detection parameters"
                     >
-                      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         <label className="space-y-2">
                           <SettingLabel>
                             Threshold
@@ -787,6 +788,11 @@ export function SettingsView({
                               }))
                             }
                           />
+
+                          <SettingHint>
+                            リザルト画面を検出する時のテンプレート画像との一致度下限です。<br></br>
+                            検出できない場合は下げ、誤検出が起きる場合は上げてください。
+                          </SettingHint>
                         </label>
 
                         <label className="space-y-2">
@@ -808,6 +814,11 @@ export function SettingsView({
                               }))
                             }
                           />
+
+                          <SettingHint>
+                            リザルト画面の検出を行う間隔です。<br></br>
+                            小さくするとより正確なタイミングで検出できますが、画面キャプチャと画像処理の頻度が増え、負荷が高まります。
+                          </SettingHint>
                         </label>
 
                         <label className="space-y-2">
@@ -827,6 +838,11 @@ export function SettingsView({
                               }))
                             }
                           />
+
+                          <SettingHint>
+                            リザルト検出時に画像を縮小する倍率です。<br></br>
+                            倍率を下げると負荷を抑えられますが、検出精度が下がる可能性があります。
+                          </SettingHint>
                         </label>
                       </div>
                     </SettingCard>
@@ -835,7 +851,7 @@ export function SettingsView({
                       title="SONG START DETECTION"
                       description="Replay song start detection parameters"
                     >
-                      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         <label className="space-y-2">
                           <SettingLabel>
                             Threshold
@@ -855,6 +871,11 @@ export function SettingsView({
                               }))
                             }
                           />
+
+                          <SettingHint>
+                            曲開始タイミングを検出する時のテンプレート画像との一致度下限です。<br></br>
+                            検出できない場合は下げ、誤検出が起きる場合は上げてください。
+                          </SettingHint>
                         </label>
 
                         <label className="space-y-2">
@@ -876,6 +897,11 @@ export function SettingsView({
                               }))
                             }
                           />
+
+                          <SettingHint>
+                            曲開始タイミングの検出を行う間隔です。<br></br>
+                            小さくするとより正確なタイミングで検出できますが、画面キャプチャと画像処理の頻度が増え、負荷が高まります。
+                          </SettingHint>
                         </label>
 
                         <label className="space-y-2">
@@ -897,100 +923,11 @@ export function SettingsView({
                               }))
                             }
                           />
-                        </label>
-                      </div>
-                    </SettingCard>
 
-                    <SettingCard
-                      title="REPLAY"
-                      description="Replay file detection and stability"
-                    >
-                      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                        <label className="space-y-2">
-                          <SettingLabel>
-                            Detection Timeout
-                          </SettingLabel>
-
-                          <NumberInput
-                            value={
-                              config.replay.detection_timeout_seconds
-                            }
-                            onChange={(value) =>
-                              updateConfig((current) => ({
-                                ...current,
-                                replay: {
-                                  ...current.replay,
-                                  detection_timeout_seconds: value,
-                                },
-                              }))
-                            }
-                          />
-                        </label>
-
-                        <label className="space-y-2">
-                          <SettingLabel>
-                            Stability Checks
-                          </SettingLabel>
-
-                          <NumberInput
-                            value={config.replay.stability_checks}
-                            onChange={(value) =>
-                              updateConfig((current) => ({
-                                ...current,
-                                replay: {
-                                  ...current.replay,
-                                  stability_checks: value,
-                                },
-                              }))
-                            }
-                          />
-                        </label>
-
-                        <label className="space-y-2">
-                          <SettingLabel>
-                            Stability Interval
-                          </SettingLabel>
-
-                          <NumberInput
-                            value={
-                              config.replay.stability_interval_seconds
-                            }
-                            onChange={(value) =>
-                              updateConfig((current) => ({
-                                ...current,
-                                replay: {
-                                  ...current.replay,
-                                  stability_interval_seconds: value,
-                                },
-                              }))
-                            }
-                          />
-                        </label>
-                      </div>
-                    </SettingCard>
-
-                    <SettingCard
-                      title="OCR"
-                      description="OCR processing parameters"
-                    >
-                      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                        <label className="space-y-2">
-                          <SettingLabel>
-                            Maximum Attempts
-                          </SettingLabel>
-
-                          <NumberInput
-                            value={config.ocr.max_attempts}
-                            onChange={(value) =>
-                              updateConfig((current) => ({
-                                ...current,
-                                ocr: {
-                                  ...current.ocr,
-                                  max_attempts: value,
-                                },
-                              }))
-                            }
-                          />
+                          <SettingHint>
+                            曲開始タイミングの検出時に画像を縮小する倍率です。<br></br>
+                            倍率を下げると負荷を抑えられますが、検出精度が下がる可能性があります。
+                          </SettingHint>
                         </label>
                       </div>
                     </SettingCard>
@@ -1201,7 +1138,7 @@ export function SettingsView({
 
                 {(message || error) && (
                   <div
-                    className={`mt-5 border p-4 font-mono text-xs ${
+                    className={`mt-5 border p-4 font-mono text-sm ${
                       error
                         ? 'border-red-500/20 bg-red-500/5 text-red-300'
                         : 'border-emerald-500/20 bg-emerald-500/5 text-emerald-300'
@@ -1216,12 +1153,12 @@ export function SettingsView({
                     type="button"
                     disabled={saving}
                     onClick={save}
-                    className="group relative flex items-center gap-2 overflow-hidden border border-cyan-400/40 bg-cyan-400/5 px-8 py-3 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-300 transition hover:border-cyan-300 hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="group relative flex items-center gap-2 overflow-hidden border border-cyan-400/40 bg-cyan-400/5 px-8 py-3.5 font-mono text-xs font-bold uppercase tracking-[0.24em] text-cyan-300 transition hover:border-cyan-300 hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <span className="absolute left-0 top-0 h-px w-8 bg-cyan-400 transition-all group-hover:w-full" />
 
                     <Save
-                      size={14}
+                      size={16}
                       strokeWidth={1.8}
                     />
 

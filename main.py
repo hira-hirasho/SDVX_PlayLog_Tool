@@ -194,20 +194,6 @@ class SDVXPlayLogApp:
 
         self._replay_file_detector = ReplayFileDetector(
             directory=replay_directory,
-            stability_checks=int(
-                self._config.get(
-                    "replay",
-                    "stability_checks",
-                    default=3,
-                )
-            ),
-            stability_interval_seconds=float(
-                self._config.get(
-                    "replay",
-                    "stability_interval_seconds",
-                    default=1.0,
-                )
-            ),
         )
 
         self._video_processor = VideoProcessor()
@@ -223,13 +209,6 @@ class SDVXPlayLogApp:
             obs_websocket=self._obs_websocket,
             replay_file_detector=self._replay_file_detector,
             replay_processor=self._replay_processor,
-            replay_detection_timeout_seconds=float(
-                self._config.get(
-                    "replay",
-                    "detection_timeout_seconds",
-                    default=30,
-                )
-            ),
             replay_detection_interval_seconds=1.0,
         )
 
@@ -253,13 +232,6 @@ class SDVXPlayLogApp:
                 "input",
                 "trigger_key",
                 default="F12",
-            ),
-            debounce_seconds=float(
-                self._config.get(
-                    "input",
-                    "debounce_seconds",
-                    default=0.1,
-                )
             ),
             callback=self._on_f12,
         )

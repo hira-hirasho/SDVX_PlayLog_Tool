@@ -56,6 +56,8 @@ class OCRProcessor:
         "NBL",
     )
 
+    MAX_ATTEMPTS = 2
+
     LEVEL_MIN = 1
     LEVEL_MAX = 20
 
@@ -63,13 +65,7 @@ class OCRProcessor:
         self._config = config
         self._cropper = OCRRegionCropper(config)
 
-        self._max_attempts = int(
-            config.get(
-                "ocr",
-                "max_attempts",
-                default=2,
-            )
-        )
+        self._max_attempts = self.MAX_ATTEMPTS
 
         self._difficulty_candidates = self.DIFFICULTY_CANDIDATES
 
@@ -78,7 +74,7 @@ class OCRProcessor:
 
         if self._max_attempts <= 0:
             raise ValueError(
-                "ocr.max_attempts must be > 0"
+                "OCR max attempts must be > 0"
             )
 
         logger.info(

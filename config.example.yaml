@@ -1,6 +1,5 @@
 input:
   trigger_key: "F12"
-  debounce_seconds: 0.1
 
 obs:
   executable_path: "C:/Program Files/obs-studio/bin/64bit/obs64.exe"
@@ -30,14 +29,7 @@ song_start_detection:
     width: 150
     height: 765
 
-replay:
-  detection_timeout_seconds: 30
-  stability_checks: 3
-  stability_interval_seconds: 1.0
-
 ocr:
-  max_attempts: 2
-
   regions:
     song_name:
       x: 387
