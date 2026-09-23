@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { BarChart3 } from "lucide-react"
 
 import { ScoreCard } from './components/playlog/ScoreCard'
 import { PlayLogFilters } from './components/playlog/PlayLogFilters'
@@ -63,6 +64,78 @@ export default function App() {
   }
 
   const totalPages = Math.ceil(total / pageSize)
+
+  const handleTodaysSummary = async () => {
+    const now = new Date()
+
+    const date = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0'),
+    ].join('-')
+
+    const summary =
+      await window.api.getTodaysPlaySummary(date)
+
+    if (summary.played === 0) {
+      await window.api.showMessageBox({
+        title: "TODAY'S SUMMARY",
+        message: '今日のプレイはありません。',
+      })
+      return
+    }
+
+    const displayDate = date.replaceAll('-', '.')
+
+    const header = [
+      `🎧 #SDVX_PLAYLOG | ${displayDate}`,
+      `🎮 PLAYED ${summary.played} / 🚀 SCORE UP ${summary.improved}`,
+    ].join('\n')
+
+    if (summary.improved === 0) {
+      const text = [
+        header,
+        '',
+        '本日はスコアが伸びたプレイはありません。',
+      ].join('\n')
+
+      const url =
+        `https://x.com/intent/post?text=${encodeURIComponent(text)}`
+
+      await window.api.openExternal(url)
+      return
+    }
+
+    const songBlocks = summary.improvedRows.map((row) => {
+      const songName = row.song_name ?? '-'
+      const artist = row.artist ?? '-'
+      const score = row.score ?? '-'
+
+      const scoreDelta =
+        row.total_score_delta > 0
+          ? `+${row.total_score_delta}`
+          : null
+
+      const scoreLine = scoreDelta
+        ? `└ ${score}(${scoreDelta})`
+        : `└ ${score}`
+
+      return [
+        `${songName} / ${artist}`,
+        scoreLine,
+      ].join('\n')
+    })
+
+    const text = [
+      header,
+      ...songBlocks,
+    ].join('\n\n')
+
+    const url =
+      `https://x.com/intent/post?text=${encodeURIComponent(text)}`
+
+    await window.api.openExternal(url)
+  }
 
   const selectedRow = useMemo(
     () => rows.find((row) => row.play_id === selectedId) ?? null,
@@ -156,8 +229,31 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Database status */}
+                {/* Today's summary + Database status */}
                 <div className="hidden shrink-0 items-center gap-5 sm:flex">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleTodaysSummary()
+                    }}
+                    className="group relative h-11.5 overflow-hidden border border-zinc-800 bg-[#070a10] font-mono text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:border-cyan-400/60 hover:text-cyan-300"
+                  >
+                    <span className="absolute left-0 top-0 h-px w-6 bg-cyan-400 transition-all group-hover:w-full" />
+
+                    <span className="flex h-full items-center gap-3 px-5">
+                      <BarChart3
+                        size={17}
+                        strokeWidth={1.8}
+                        className="shrink-0"
+                      />
+
+                      <span className="flex flex-col items-start leading-[1.1]">
+                        <span>TODAY'S</span>
+                        <span>SUMMARY</span>
+                      </span>
+                    </span>
+                  </button>
+
                   <div className="h-12 w-px bg-zinc-800" />
 
                   <div className="text-right">

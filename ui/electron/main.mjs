@@ -20,6 +20,7 @@ import {
 } from './paths.mjs'
 import {
   getPlayLogs,
+  getTodaysPlaySummary,
   updatePlayLog,
   deletePlayLog,
 } from './db.mjs'
@@ -189,6 +190,27 @@ if (!gotTheLock) {
     },
   )
 
+  ipcMain.handle(
+    'app:show-message-box',
+    async (_event, options = {}) => {
+      const result = await dialog.showMessageBox({
+        type: 'info',
+        title:
+          typeof options.title === 'string'
+            ? options.title
+            : 'SDVX PlayLog Tool',
+        message:
+          typeof options.message === 'string'
+            ? options.message
+            : '',
+      })
+
+      return {
+        response: result.response,
+      }
+    },
+  )
+
   ipcMain.handle('play-log:get-list', (_event, options) => {
     const result = getPlayLogs(options)
 
@@ -211,6 +233,13 @@ if (!gotTheLock) {
       rows,
     }
   })
+
+  ipcMain.handle(
+    'play-log:get-todays-summary',
+    (_event, date) => {
+      return getTodaysPlaySummary(date)
+    },
+  )
 
   ipcMain.handle('play-log:update', (_event, playId, values) => {
       return updatePlayLog(playId, values)

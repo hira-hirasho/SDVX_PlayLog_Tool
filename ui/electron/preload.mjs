@@ -24,6 +24,18 @@ contextBridge.exposeInMainWorld('api', {
       options,
     ),
 
+  getTodaysPlaySummary: (date) =>
+    ipcRenderer.invoke(
+      'play-log:get-todays-summary',
+      date,
+    ),
+
+  showMessageBox: (options) =>
+    ipcRenderer.invoke(
+      'app:show-message-box',
+      options,
+    ),
+
   getPlayMedia: (playId) =>
     ipcRenderer.invoke(
       'play-log:get-media',

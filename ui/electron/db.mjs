@@ -168,3 +168,96 @@ export function deletePlayLog(playId) {
     db.close()
   }
 }
+
+export function getTodaysPlaySummary(date) {
+  if (
+    typeof date !== 'string' ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(date)
+  ) {
+    throw new Error('Invalid date')
+  }
+
+  const [year, month, day] = date
+    .split('-')
+    .map(Number)
+
+  const nextDate = new Date(
+    year,
+    month - 1,
+    day + 1,
+  )
+
+  const nextDateString = [
+    nextDate.getFullYear(),
+    String(nextDate.getMonth() + 1).padStart(2, '0'),
+    String(nextDate.getDate()).padStart(2, '0'),
+  ].join('-')
+
+  const db = getDatabase()
+
+  try {
+    const rows = db
+      .prepare(`
+        SELECT
+          play_id,
+          played_at,
+          song_name,
+          artist,
+          difficulty,
+          level,
+          score,
+          score_delta,
+          ex_score,
+          ex_score_delta
+        FROM play_log
+        WHERE
+          played_at >= @startDate
+          AND played_at < @endDate
+        ORDER BY
+          score DESC,
+          played_at DESC
+      `)
+      .all({
+        startDate: `${date}T00:00:00`,
+        endDate: `${nextDateString}T00:00:00`,
+      })
+
+    const bestRowsBySong = new Map()
+
+    for (const row of rows) {
+      const songKey = row.song_name ?? ''
+
+      if (!bestRowsBySong.has(songKey)) {
+        bestRowsBySong.set(songKey, {
+          ...row,
+          total_score_delta:
+            row.score_delta > 0
+              ? row.score_delta
+              : 0,
+        })
+      } else {
+        const existing = bestRowsBySong.get(songKey)
+
+        if (row.score_delta > 0) {
+          existing.total_score_delta += row.score_delta
+        }
+      }
+    }
+
+    const bestRows = Array.from(
+      bestRowsBySong.values(),
+    )
+
+    const improvedRows = bestRows.filter(
+      (row) => row.total_score_delta > 0,
+    )
+
+    return {
+      played: bestRows.length,
+      improved: improvedRows.length,
+      improvedRows,
+    }
+  } finally {
+    db.close()
+  }
+}
