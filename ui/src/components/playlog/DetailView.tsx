@@ -531,11 +531,11 @@ export function DetailView({
                               song_name: event.target.value || null,
                             }))
                           }}
-                          className="w-full border border-fuchsia-400/50 bg-[#070a10] px-4 py-2 font-mono text-2xl font-black uppercase leading-tight text-white outline-none focus:border-fuchsia-400 sm:text-3xl lg:text-4xl"
+                          className="w-full border border-fuchsia-400/50 bg-[#070a10] px-4 py-2 font-mono text-2xl font-black leading-tight text-white outline-none focus:border-fuchsia-400 sm:text-3xl lg:text-4xl"
                         />
                       ) : (
                         <h1
-                          className="wrap-break-word font-mono text-3xl font-black uppercase leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-4xl"
+                          className="wrap-break-word font-mono text-3xl font-black leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-4xl"
                           title={row.song_name ?? ''}
                         >
                           {row.song_name ?? '\u00A0'}
