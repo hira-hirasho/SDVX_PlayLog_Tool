@@ -7,6 +7,19 @@ import type {
 declare global {
   interface Window {
     api: {
+      getConfig: () => Promise<Record<string, unknown>>
+
+      saveConfig: (
+        config: Record<string, unknown>,
+      ) => Promise<{
+        saved: boolean
+      }>
+
+      selectFile: (options?: {
+        defaultPath?: string
+        extensions?: string[]
+      }) => Promise<string | null>
+
       getPlayLogs: (options?: {
         limit?: number
         offset?: number

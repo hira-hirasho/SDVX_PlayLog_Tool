@@ -6,15 +6,17 @@ from typing import Any
 import yaml
 from dotenv import load_dotenv
 
+from app.core.data_paths import get_config_path
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ENV_FILE = PROJECT_ROOT / ".env"
-CONFIG_FILE = PROJECT_ROOT / "config.yaml"
+CONFIG_FILE = get_config_path()
 
 
 @dataclass(frozen=True)
 class AppConfig:
-    """PlayLog Toolの通常設定。"""
+    """PlayLog Toolのユーザー設定。"""
 
     data: dict[str, Any]
 
@@ -41,7 +43,7 @@ def load_environment() -> None:
 
 
 def load_config() -> AppConfig:
-    """config.yamlを読み込む。"""
+    """LocalAppDataのconfig.yamlからユーザー設定を読み込む。"""
     if not CONFIG_FILE.exists():
         raise FileNotFoundError(
             f"Config file not found: {CONFIG_FILE}"

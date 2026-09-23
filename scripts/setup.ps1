@@ -112,8 +112,11 @@ Write-Host "  UI environment ready." -ForegroundColor Green
 
 Write-Host "[6/8] Preparing local configuration..." -ForegroundColor Yellow
 
-$configPath = Join-Path $ProjectRoot "config.yaml"
+$appDataRoot = Join-Path $env:LOCALAPPDATA "SDVX PlayLog Tool"
+$configPath = Join-Path $appDataRoot "config.yaml"
 $configExamplePath = Join-Path $ProjectRoot "config.example.yaml"
+
+New-Item -ItemType Directory -Force -Path $appDataRoot | Out-Null
 
 if (-not (Test-Path $configPath)) {
     if (-not (Test-Path $configExamplePath)) {
@@ -121,7 +124,8 @@ if (-not (Test-Path $configPath)) {
     }
 
     Copy-Item $configExamplePath $configPath
-    Write-Host "  Created config.yaml" -ForegroundColor Green
+
+    Write-Host "  Created config.yaml in LocalAppData." -ForegroundColor Green
 }
 else {
     Write-Host "  config.yaml already exists. Kept existing file." -ForegroundColor Green

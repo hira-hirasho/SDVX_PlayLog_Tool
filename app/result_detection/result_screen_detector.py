@@ -1,12 +1,12 @@
-from __future__ import annotations
-
-from pathlib import Path
-
 import cv2
 import numpy as np
 
+from app.core.config import AppConfig, PROJECT_ROOT
 
-from app.core.config import AppConfig
+
+RESULT_TEMPLATE_PATH = (
+    PROJECT_ROOT / "templates" / "result_screen.png"
+)
 
 
 class ResultScreenDetector:
@@ -15,17 +15,7 @@ class ResultScreenDetector:
     def __init__(self, config: AppConfig) -> None:
         self._config = config
 
-        template_path = self._config.get(
-            "result_detection",
-            "template_path",
-        )
-
-        if not template_path:
-            raise ValueError(
-                "result_detection.template_path is not configured"
-            )
-
-        self._template_path = Path(template_path)
+        self._template_path = RESULT_TEMPLATE_PATH
 
         self._threshold = float(
             self._config.get(

@@ -1,6 +1,23 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('api', {
+  getConfig: () =>
+    ipcRenderer.invoke(
+      'config:get',
+    ),
+
+  saveConfig: (config) =>
+    ipcRenderer.invoke(
+      'config:save',
+      config,
+    ),
+
+  selectFile: (options) =>
+    ipcRenderer.invoke(
+      'config:select-file',
+      options,
+    ),
+
   getPlayLogs: (options) =>
     ipcRenderer.invoke(
       'play-log:get-list',

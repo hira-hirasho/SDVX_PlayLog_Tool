@@ -1,6 +1,7 @@
 import {
   app,
   BrowserWindow,
+  dialog,
   ipcMain,
   Menu,
   protocol,
@@ -9,10 +10,14 @@ import {
 
 import fs from 'node:fs'
 import path from 'node:path'
+import * as yaml from 'js-yaml'
 import { Readable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
 
-import { getDataRoot } from './paths.mjs'
+import {
+  getConfigPath,
+  getDataRoot,
+} from './paths.mjs'
 import {
   getPlayLogs,
   updatePlayLog,
@@ -107,6 +112,82 @@ if (!gotTheLock) {
       }
     })
   }
+
+  ipcMain.handle('config:get', () => {
+    const configPath = getConfigPath()
+
+    if (!fs.existsSync(configPath)) {
+      throw new Error(
+        `Config file not found: ${configPath}`,
+      )
+    }
+
+    const content = fs.readFileSync(
+      configPath,
+      'utf-8',
+    )
+
+    return yaml.load(content) ?? {}
+  })
+
+  ipcMain.handle(
+    'config:save',
+    (_event, config) => {
+      if (
+        config === null ||
+        typeof config !== 'object' ||
+        Array.isArray(config)
+      ) {
+        throw new Error(
+          'Config must be a YAML mapping',
+        )
+      }
+
+      const configPath = getConfigPath()
+
+      const content = yaml.dump(
+        config,
+        {
+          noRefs: true,
+          lineWidth: -1,
+        },
+      )
+
+      fs.writeFileSync(
+        configPath,
+        content,
+        'utf-8',
+      )
+
+      return {
+        saved: true,
+      }
+    },
+  )
+
+  ipcMain.handle(
+    'config:select-file',
+    async (_event, options = {}) => {
+      const result = await dialog.showOpenDialog({
+        defaultPath: options.defaultPath || undefined,
+        properties: ['openFile'],
+        filters: Array.isArray(options.extensions)
+          ? [
+              {
+                name: 'Files',
+                extensions: options.extensions,
+              },
+            ]
+          : undefined,
+      })
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return null
+      }
+
+      return result.filePaths[0]
+    },
+  )
 
   ipcMain.handle('play-log:get-list', (_event, options) => {
     const result = getPlayLogs(options)

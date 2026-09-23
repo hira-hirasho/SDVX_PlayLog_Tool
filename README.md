@@ -164,20 +164,24 @@ npm run dist
 
 # ✦ Configuration
 
-個人環境の設定は `config.yaml` で行います。
+個人環境の設定は `%LOCALAPPDATA%\SDVX PlayLog Tool\config.yaml` で行います。
 
 サンプル設定は `config.example.yaml` を使用します。
 
 OBS WebSocketのパスワードは `.env` の `OBS_WEBSOCKET_PASSWORD` に設定します。
 
 ```text
-config.yaml
+%LOCALAPPDATA%\SDVX PlayLog Tool\
+│
+└── config.yaml
      │
      ├── アプリ設定
      │
      └── 個人環境設定
 
-.env
+プロジェクトルート\
+│
+└── .env
      │
      └── OBS WebSocket Password
 ```
@@ -195,7 +199,7 @@ config.yaml
 ### Data Structure
 
 ```text
-data/
+%LOCALAPPDATA%\SDVX PlayLog Tool\data\
 │
 ├── database/    ← プレイ履歴
 ├── debug/       ← デバッグデータ

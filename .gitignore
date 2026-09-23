@@ -14,7 +14,6 @@ wheels/
 
 # Local configuration / secrets
 .env
-config.yaml
 
 # Runtime data
 data/

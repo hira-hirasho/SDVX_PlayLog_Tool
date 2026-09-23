@@ -7,6 +7,11 @@ from loguru import logger
 from app.core.config import AppConfig, PROJECT_ROOT
 
 
+SONG_START_TEMPLATE_PATH = (
+    PROJECT_ROOT / "templates" / "song_start.png"
+)
+
+
 class SongStartDetector:
     """リアルタイム画面キャプチャから曲開始画面を検出する。"""
 
@@ -19,19 +24,7 @@ class SongStartDetector:
             default={},
         )
 
-        template_path = detection_config.get(
-            "template_path"
-        )
-
-        if not template_path:
-            raise ValueError(
-                "song_start_detection.template_path "
-                "is not configured"
-            )
-
-        self.template_path = (
-            PROJECT_ROOT / template_path
-        )
+        self.template_path = SONG_START_TEMPLATE_PATH
 
         if not self.template_path.is_file():
             raise FileNotFoundError(

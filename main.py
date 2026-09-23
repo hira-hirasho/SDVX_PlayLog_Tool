@@ -132,7 +132,7 @@ class SDVXPlayLogApp:
         )
 
         # 一時ファイルはアプリ管理領域で管理する。
-        temp_directory = resolve_data_path("data/temp")
+        temp_directory = resolve_data_path("temp")
 
         self._result_record_handler: ResultRecordHandler | None = None
         self._result_f12_handler: ResultF12Handler | None = None
@@ -163,7 +163,7 @@ class SDVXPlayLogApp:
         )
 
         database_path = resolve_data_path(
-            "data/database/playlog.db"
+            "database/playlog.db"
         )
 
         self._play_log_database = PlayLogDatabase(
@@ -217,7 +217,7 @@ class SDVXPlayLogApp:
         )
 
         # 正式保存メディアはアプリ管理領域で管理する。
-        media_root = resolve_data_path("data/media")
+        media_root = resolve_data_path("media")
 
         self._replay_video_saver = ReplayVideoSaver(
             obs_websocket=self._obs_websocket,
@@ -298,9 +298,8 @@ class SDVXPlayLogApp:
 
         try:
             while self._running:
-                sdvx_active = is_sdvx_running(
-                    self._config
-                )
+                sdvx_active = is_sdvx_running()
+
                 state = self._state_manager.state
 
                 if self._is_tray_enabled():
@@ -850,9 +849,7 @@ class SDVXPlayLogApp:
             )
             return
 
-        if not is_sdvx_running(
-            self._config
-        ):
+        if not is_sdvx_running():
             logger.debug(
                 "F12: ignored because SDVX is not running"
             )

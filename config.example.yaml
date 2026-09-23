@@ -1,6 +1,3 @@
-sdvx:
-  process_name: "sv6c.exe"
-
 input:
   trigger_key: "F12"
   debounce_seconds: 0.1
@@ -14,10 +11,9 @@ obs:
   scene_name: "SDVX PlayLog Tool"
 
 result_detection:
-  template_path: "templates/result_screen.png"
   threshold: 0.85
   interval_seconds: 1.0
-  scale: 0.25
+  scale: 1.0
   region:
     x: 1666
     y: 584
@@ -25,10 +21,9 @@ result_detection:
     height: 462
 
 song_start_detection:
-  template_path: "templates/song_start.png"
   threshold: 0.85
   interval_seconds: 1.0
-  scale: 0.25
+  scale: 1.0
   region:
     x: 572
     y: 155
