@@ -473,7 +473,7 @@ export function SettingsView({
           ...current,
           obs: {
             ...current.obs,
-            executable_path: selectedPath,
+            executable_path: selectedPath.replace(/\\/g, '/'),
           },
         }))
       }
