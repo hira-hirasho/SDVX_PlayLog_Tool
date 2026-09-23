@@ -80,7 +80,7 @@ export default function App() {
     if (summary.played === 0) {
       await window.api.showMessageBox({
         title: "TODAY'S SUMMARY",
-        message: '今日のプレイはありません。',
+        message: '今日はまだSDVXをプレイしていないようです。',
       })
       return
     }
