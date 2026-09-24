@@ -109,6 +109,8 @@ export default function App() {
     const songBlocks = summary.improvedRows.map((row) => {
       const songName = row.song_name ?? '-'
       const artist = row.artist ?? '-'
+      const difficulty = row.difficulty ?? '-'
+      const level = row.level ?? '-'
       const score = row.score ?? '-'
 
       const scoreDelta =
@@ -121,7 +123,7 @@ export default function App() {
         : `└ ${score}`
 
       return [
-        `${songName} / ${artist}`,
+        `${songName} / ${artist} [${difficulty} ${level}]`,
         scoreLine,
       ].join('\n')
     })
