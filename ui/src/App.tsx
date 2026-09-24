@@ -210,7 +210,7 @@ export default function App() {
 
                     <span className="absolute -right-5 top-1/2 h-px w-10 -translate-y-1/2 bg-fuchsia-500/60 shadow-[0_0_8px_rgba(217,70,239,0.6)]" />
 
-                    <h1 className="relative font-mono text-4xl font-black italic uppercase tracking-[0.16em] text-white drop-shadow-[0_0_14px_rgba(255,255,255,0.22)] sm:text-5xl lg:text-6xl">
+                    <h1 className="relative font-mono text-4xl font-black italic uppercase tracking-[0.16em] text-white drop-shadow-[0_0_14px_rgba(255,255,255,0.22)] min-[1400px]:text-5xl min-[1600px]:text-6xl">
                       <span className="text-cyan-300 drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]">SDVX</span><span className="mx-3 text-zinc-700">/</span><span className="tracking-[0.2em] text-white">PLAYLOG</span><span className="ml-3 text-fuchsia-300 drop-shadow-[0_0_12px_rgba(217,70,239,0.7)]">TOOL</span>
                     </h1>
                   </div>

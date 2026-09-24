@@ -61,7 +61,7 @@ export function SystemPageHeader({
                 </div>
 
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="whitespace-nowrap font-mono text-2xl font-black italic uppercase tracking-[0.12em] text-white sm:text-3xl">
+                  <span className="whitespace-nowrap font-mono text-2xl font-black italic uppercase tracking-[0.12em] text-white min-[1400px]:text-3xl">
                     <span className="text-cyan-300">
                       SDVX
                     </span>
