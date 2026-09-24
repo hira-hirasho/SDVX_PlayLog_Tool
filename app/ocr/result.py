@@ -8,7 +8,9 @@ class OCRResult:
     song_name: str | None = None
     artist: str | None = None
     difficulty: str | None = None
-    level: int | None = None
+    level: float | None = None
+    clear_type: str | None = None
+    rate_type: str | None = None
     score: int | None = None
     score_delta: int | None = None
     ex_score: int | None = None
@@ -111,16 +113,134 @@ def normalize_difficulty(
 
 def normalize_level(
     value: str | None,
-    minimum: int,
-    maximum: int,
-) -> int | None:
-    """OCRで取得したLEVELを整数へ正規化する。"""
-    level = normalize_numeric_text(value)
+    minimum: float,
+    maximum: float,
+) -> float | None:
+    """OCRで取得したLEVELを整数または小数へ正規化する。"""
+    if value is None:
+        return None
 
-    if level is None:
+    text = (
+        value
+        .strip()
+        .replace(" ", "")
+        .replace(",", "")
+    )
+
+    if not text:
+        return None
+
+    try:
+        level = float(text)
+    except ValueError:
         return None
 
     if not minimum <= level <= maximum:
         return None
 
     return level
+
+
+def parse_difficulty_level(
+    value: str | None,
+    candidates: list[str],
+    minimum: float,
+    maximum: float,
+) -> tuple[str | None, float | None]:
+    """
+    OCRで取得した難易度+LEVELを解析する。
+
+    以下のようなOCR結果を許容する。
+
+    EXH 16
+    EXH16
+    MXM 18
+    MXM18.6
+    MXM 18.6
+    """
+    if value is None:
+        return None, None
+
+    text = (
+        value
+        .strip()
+        .upper()
+        .replace(" ", "")
+    )
+
+    if not text:
+        return None, None
+
+    # OCR候補の中から難易度を先頭部分として探す。
+    difficulty = None
+
+    for candidate in sorted(
+        candidates,
+        key=len,
+        reverse=True,
+    ):
+        normalized_candidate = candidate.upper()
+
+        if text.startswith(normalized_candidate):
+            difficulty = candidate
+            text = text[len(normalized_candidate):]
+            break
+
+    if difficulty is None:
+        return None, None
+
+    # 残りをLEVELとして解析する。
+    level = normalize_level(
+        text,
+        minimum,
+        maximum,
+    )
+
+    if level is None:
+        return difficulty, None
+
+    return difficulty, level
+
+
+def normalize_clear_type(
+    value: str | None,
+) -> str | None:
+    """OCRで取得したクリアタイプを正規化する。"""
+    if value is None:
+        return None
+
+    text = (
+        value
+        .strip()
+        .upper()
+        .replace(" ", "")
+        .replace("_", "")
+        .replace("-", "")
+    )
+
+    if text in {
+        "COMPLETE",
+        "ULTIMATECHAIN",
+        "PERFECT",
+        "CRASH",
+    }:
+        return text
+
+    return None
+
+
+def normalize_rate_type(value: str | None) -> str | None:
+    """OCRで取得したRATE種別を正規化する。"""
+    if value is None:
+        return None
+
+    text = " ".join(value.strip().upper().split())
+
+    if text in {
+        "EFFECTIVE RATE",
+        "EXCESSIVE RATE",
+        "MAXXIVE RATE",
+    }:
+        return text
+
+    return None

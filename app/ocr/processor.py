@@ -11,10 +11,11 @@ from app.core.logger import get_logger
 from app.ocr.region_cropper import OCRRegionCropper
 from app.ocr.result import (
     OCRResult,
-    normalize_difficulty,
+    normalize_clear_type,
     normalize_fixed_digits,
-    normalize_level,
     normalize_numeric_text,
+    normalize_rate_type,
+    parse_difficulty_level,
 )
 
 
@@ -29,6 +30,8 @@ class OCRProcessor:
         "artist",
         "difficulty",
         "level",
+        "clear_type",
+        "rate_type",
         "score",
         "score_delta",
         "ex_score",
@@ -36,9 +39,7 @@ class OCRProcessor:
     )
 
     NUMERIC_FIELDS = (
-        "level",
-        "score_first",
-        "score_second",
+        "score",
         "ex_score",
     )
 
@@ -161,9 +162,11 @@ class OCRProcessor:
             finally:
                 crop.close()
 
-        score_text = self._combine_score(
-            raw_texts.get("score_first"),
-            raw_texts.get("score_second"),
+        difficulty, level = parse_difficulty_level(
+            raw_texts.get("difficulty_level"),
+            self._difficulty_candidates,
+            self._level_min,
+            self._level_max,
         )
 
         result = OCRResult(
@@ -173,17 +176,16 @@ class OCRProcessor:
             artist=self._normalize_text(
                 raw_texts.get("artist"),
             ),
-            difficulty=normalize_difficulty(
-                raw_texts.get("difficulty"),
-                self._difficulty_candidates,
+            difficulty=difficulty,
+            level=level,
+            clear_type=normalize_clear_type(
+                raw_texts.get("clear_type"),
             ),
-            level=normalize_level(
-                raw_texts.get("level"),
-                self._level_min,
-                self._level_max,
+            rate_type=normalize_rate_type(
+                raw_texts.get("rate_type"),
             ),
             score=normalize_fixed_digits(
-                score_text,
+                raw_texts.get("score"),
                 expected_length=8,
             ),
             score_delta=normalize_numeric_text(
@@ -203,6 +205,8 @@ class OCRProcessor:
             f"artist={result.artist!r}, "
             f"difficulty={result.difficulty!r}, "
             f"level={result.level!r}, "
+            f"clear_type={result.clear_type!r}, "
+            f"rate_type={result.rate_type!r}, "
             f"score={result.score!r}, "
             f"score_delta={result.score_delta!r}, "
             f"ex_score={result.ex_score!r}, "
@@ -428,16 +432,6 @@ class OCRProcessor:
         return tuple(
             sorted({blank_index, *digit_indices})
         )
-
-    @staticmethod
-    def _combine_score(
-        first: str | None,
-        second: str | None,
-    ) -> str | None:
-        if not first or not second:
-            return None
-
-        return f"{first}{second}"
 
     @staticmethod
     def _extract_text(result) -> str | None:

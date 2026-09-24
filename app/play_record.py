@@ -16,7 +16,9 @@ class PlayRecord:
     song_name: str | None
     artist: str | None
     difficulty: str | None
-    level: int | None
+    level: float | None
+    clear_type: str | None
+    rate_type: str | None
     score: int | None
     score_delta: int | None
     ex_score: int | None
@@ -37,6 +39,8 @@ class PlayRecord:
             artist=ocr_result.artist,
             difficulty=ocr_result.difficulty,
             level=ocr_result.level,
+            clear_type=ocr_result.clear_type,
+            rate_type=ocr_result.rate_type,
             score=ocr_result.score,
             score_delta=ocr_result.score_delta,
             ex_score=ocr_result.ex_score,

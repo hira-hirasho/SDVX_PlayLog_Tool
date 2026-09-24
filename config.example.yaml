@@ -43,29 +43,29 @@ ocr:
       width: 530
       height: 32
 
-    difficulty:
-      x: 51
-      y: 866
-      width: 86
+    difficulty_level:
+      x: 50
+      y: 865
+      width: 148
       height: 41
 
-    level:
-      x: 136
-      y: 866
-      width: 62
-      height: 41
+    clear_type:
+      x: 464
+      y: 925
+      width: 610
+      height: 65
+
+    rate_type:
+      x: 726
+      y: 1197
+      width: 197
+      height: 23
 
     score:
-      first:
-        x: 427
-        y: 1065
-        width: 234
-        height: 60
-      second:
-        x: 660
-        y: 1086
-        width: 147
-        height: 37
+      x: 427
+      y: 1065
+      width: 380
+      height: 60
 
     score_delta:
       x: 816

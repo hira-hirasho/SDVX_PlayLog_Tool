@@ -40,6 +40,17 @@ declare global {
           artist: string | null
           difficulty: string | null
           level: number | null
+          clear_type:
+            | 'COMPLETE'
+            | 'ULTIMATECHAIN'
+            | 'PERFECT'
+            | 'CRASH'
+            | null
+          rate_type:
+            | 'EFFECTIVE RATE'
+            | 'EXCESSIVE RATE'
+            | 'MAXXIVE RATE'
+            | null
           score: number | null
           score_delta: number | null
           ex_score: number | null
@@ -75,6 +86,17 @@ declare global {
           artist: string | null
           difficulty: string | null
           level: number | null
+          clear_type:
+            | 'COMPLETE'
+            | 'ULTIMATECHAIN'
+            | 'PERFECT'
+            | 'CRASH'
+            | null
+          rate_type:
+            | 'EFFECTIVE RATE'
+            | 'EXCESSIVE RATE'
+            | 'MAXXIVE RATE'
+            | null
           score: number | null
           score_delta: number | null
           ex_score: number | null

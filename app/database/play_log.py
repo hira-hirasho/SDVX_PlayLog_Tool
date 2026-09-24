@@ -19,6 +19,8 @@ class PlayLogDatabase:
         "artist",
         "difficulty",
         "level",
+        "clear_type",
+        "rate_type",
         "score",
         "score_delta",
         "ex_score",
@@ -62,7 +64,9 @@ class PlayLogDatabase:
                     song_name TEXT,
                     artist TEXT,
                     difficulty TEXT,
-                    level INTEGER,
+                    level REAL,
+                    clear_type TEXT,
+                    rate_type TEXT,
                     score INTEGER,
                     score_delta INTEGER,
                     ex_score INTEGER,
@@ -102,12 +106,14 @@ class PlayLogDatabase:
                     artist,
                     difficulty,
                     level,
+                    clear_type,
+                    rate_type,
                     score,
                     score_delta,
                     ex_score,
                     ex_score_delta
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     record.play_id,
@@ -118,6 +124,8 @@ class PlayLogDatabase:
                     record.artist,
                     record.difficulty,
                     record.level,
+                    record.clear_type,
+                    record.rate_type,
                     record.score,
                     record.score_delta,
                     record.ex_score,

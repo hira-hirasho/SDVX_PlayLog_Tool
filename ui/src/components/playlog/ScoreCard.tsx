@@ -2,6 +2,9 @@ import type { CSSProperties } from 'react'
 
 import type { PlayLogRow } from '../../types/playLog'
 
+import { ClearTypeBadge } from './ClearTypeBadge'
+import { GradeBadge } from './GradeBadge'
+
 import {
   difficultyColors,
   gradeColors,
@@ -28,7 +31,7 @@ export function ScoreCard({
       type="button"
       onClick={onClick}
       style={{ '--glow': `${gradeColor}33` } as CSSProperties}
-      className="group relative grid w-full grid-cols-[64px_minmax(220px,1fr)_120px_130px_120px_130px_120px_150px] items-center gap-4 overflow-hidden border border-zinc-800/80 bg-[#080b12]/90 px-4 py-2.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-zinc-600 hover:bg-[#0d111b] hover:shadow-[0_0_18px_var(--glow)]"
+      className="group relative grid w-full grid-cols-[116px_minmax(180px,1fr)_120px_130px_120px_130px_120px_150px] items-center gap-4 overflow-hidden border border-zinc-800/80 bg-[#080b12]/90 px-4 py-2.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-zinc-600 hover:bg-[#0d111b] hover:shadow-[0_0_18px_var(--glow)]"
     >
       <span
         className="absolute inset-x-0 top-0 h-px"
@@ -40,17 +43,16 @@ export function ScoreCard({
 
       <span className="absolute right-0 top-0 h-full w-px bg-linear-to-b from-transparent via-zinc-800 to-transparent" />
 
-      <div
-        className="relative flex h-10 w-14 shrink-0 items-center justify-center border text-xl font-black"
-        style={{
-          color: gradeColor,
-          borderColor: `${gradeColor}55`,
-          backgroundColor: `${gradeColor}0D`,
-          clipPath:
-            'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
-        }}
-      >
-        {grade || '-'}
+      <div className="flex items-center gap-2">
+        <ClearTypeBadge
+          value={row.clear_type}
+          rateType={row.rate_type}
+        />
+
+        <GradeBadge
+          grade={grade}
+          color={gradeColor}
+        />
       </div>
 
       <div className="min-w-0">

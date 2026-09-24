@@ -7,6 +7,9 @@ import { SystemBackground } from '../effects/SystemBackground'
 import { SystemPageHeader } from '../layout/SystemPageHeader'
 import { SystemSidebar } from '../layout/SystemSidebar'
 
+import { ClearTypeBadge } from './ClearTypeBadge'
+import { GradeBadge } from './GradeBadge'
+
 import {
   difficultyColors,
   gradeColors,
@@ -28,10 +31,6 @@ export function DetailView({
   onUpdated: () => void
   onSettings: () => void
 }) {
-  const grade = getGrade(row.score)
-  const gradeColor = gradeColors[grade] ?? '#888'
-  const difficultyColor = difficultyColors[row.difficulty ?? ''] ?? '#888'
-
   const [media, setMedia] = useState<{
     resultImage: string | null
     replayVideo: string | null
@@ -40,9 +39,29 @@ export function DetailView({
     replayVideo: null,
   })
 
+  const clearTypeBadgeRef = useRef<HTMLDivElement>(null)
+
+  const [clearTypePickerPosition, setClearTypePickerPosition] = useState<{
+    left: number
+    top: number
+  } | null>(null)
+
+  const [isClearTypePickerOpen, setIsClearTypePickerOpen] =
+    useState(false)
+
   const [editedRow, setEditedRow] = useState(row)
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+
+  const grade = getGrade(
+    isEditing ? editedRow.score : row.score,
+  )
+  const gradeColor = gradeColors[grade] ?? '#888'
+
+  const difficultyColor =
+    difficultyColors[
+      (isEditing ? editedRow.difficulty : row.difficulty) ?? ''
+    ] ?? '#888'
 
   const [
     isRecordDeleteConfirmOpen,
@@ -141,6 +160,8 @@ export function DetailView({
           artist: editedRow.artist,
           difficulty: editedRow.difficulty,
           level: editedRow.level,
+          clear_type: editedRow.clear_type,
+          rate_type: editedRow.rate_type,
           score: editedRow.score,
           score_delta: editedRow.score_delta,
           ex_score: editedRow.ex_score,
@@ -159,6 +180,56 @@ export function DetailView({
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const clearTypeOptions: Array<{
+    clearType: PlayLogRow['clear_type']
+    rateType: PlayLogRow['rate_type']
+  }> = [
+    {
+      clearType: 'COMPLETE',
+      rateType: 'EFFECTIVE RATE',
+    },
+    {
+      clearType: 'COMPLETE',
+      rateType: 'EXCESSIVE RATE',
+    },
+    {
+      clearType: 'COMPLETE',
+      rateType: 'MAXXIVE RATE',
+    },
+    {
+      clearType: 'ULTIMATECHAIN',
+      rateType: null,
+    },
+    {
+      clearType: 'PERFECT',
+      rateType: null,
+    },
+    {
+      clearType: 'CRASH',
+      rateType: null,
+    },
+  ]
+
+  const handleClearTypeChange = (
+    clearType: PlayLogRow['clear_type'],
+    rateType: PlayLogRow['rate_type'],
+  ) => {
+    if (!isEditing || isSaving) {
+      return
+    }
+
+    setEditedRow((current) => ({
+      ...current,
+      clear_type: clearType,
+      rate_type:
+        rateType !== null
+          ? rateType
+          : current.rate_type,
+    }))
+
+    setIsClearTypePickerOpen(false)
   }
 
   const handleShare = async () => {
@@ -564,39 +635,105 @@ export function DetailView({
                       )}
                     </div>
 
-                    {/* Grade */}
-                    <div className="relative flex h-20 w-20 shrink-0 items-center justify-center">
-                      <span
-                        className="plg-glow-pulse absolute inset-0"
-                        style={{ boxShadow: `0 0 38px ${gradeColor}50` }}
+                    {/* Clear / Grade */}
+                    <div
+                      ref={clearTypeBadgeRef}
+                      className="relative flex shrink-0 flex-col items-center gap-1.5"
+                    >
+                      {isEditing ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isClearTypePickerOpen) {
+                              setIsClearTypePickerOpen(false)
+                              return
+                            }
+
+                            const rect =
+                              clearTypeBadgeRef.current?.getBoundingClientRect()
+
+                            if (!rect) {
+                              return
+                            }
+
+                            setClearTypePickerPosition({
+                              left: rect.right + 12,
+                              top: rect.top,
+                            })
+
+                            setIsClearTypePickerOpen(true)
+                          }}
+                          disabled={isSaving}
+                          className="relative rounded-full transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="Change clear type"
+                          aria-expanded={isClearTypePickerOpen}
+                        >
+                          <ClearTypeBadge
+                            value={editedRow.clear_type}
+                            rateType={editedRow.rate_type}
+                            size={60}
+                          />
+                        </button>
+                      ) : (
+                        <ClearTypeBadge
+                          value={row.clear_type}
+                          rateType={row.rate_type}
+                          size={60}
+                        />
+                      )}
+
+                      <GradeBadge
+                        grade={grade}
+                        color={gradeColor}
+                        size={60}
                       />
 
-                      <div
-                        className="plg-stamp-in relative flex h-full w-full items-center justify-center border"
-                        style={{
-                          color: gradeColor,
-                          borderColor: `${gradeColor}66`,
-                          backgroundColor: `${gradeColor}0d`,
-                          boxShadow: `inset 0 0 24px ${gradeColor}08`,
-                        }}
-                      >
-                        <span
-                          className="absolute inset-2 border border-dashed"
-                          style={{ borderColor: `${gradeColor}25` }}
-                        />
+                      {isEditing &&
+                        isClearTypePickerOpen &&
+                        clearTypePickerPosition &&
+                        createPortal(
+                          <div
+                            className="fixed z-100 border border-zinc-700 bg-[#070a10]/98 p-3 shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-sm"
+                            style={{
+                              left: clearTypePickerPosition.left,
+                              top: clearTypePickerPosition.top,
+                            }}
+                          >
+                            <div className="mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">
+                              CLEAR TYPE
+                            </div>
 
-                        <span className="relative font-mono text-4xl font-black italic drop-shadow-[0_0_14px_currentColor]">
-                          {grade || '-'}
-                        </span>
-
-                        <span
-                          className="absolute bottom-0 left-0 h-0.5 w-full"
-                          style={{
-                            backgroundColor: gradeColor,
-                            boxShadow: `0 0 10px ${gradeColor}`,
-                          }}
-                        />
-                      </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              {clearTypeOptions.map((option) => (
+                                <button
+                                  key={`${option.clearType}-${option.rateType ?? 'NONE'}`}
+                                  type="button"
+                                  onClick={() =>
+                                    handleClearTypeChange(
+                                      option.clearType,
+                                      option.rateType,
+                                    )
+                                  }
+                                  disabled={isSaving}
+                                  className="flex h-16 w-16 items-center justify-center border border-transparent transition hover:border-fuchsia-400/50 hover:bg-fuchsia-400/5 disabled:cursor-not-allowed disabled:opacity-50"
+                                  aria-label={
+                                    option.rateType
+                                      ? `${option.clearType} / ${option.rateType}`
+                                      : option.clearType ?? 'None'
+                                  }
+                                >
+                                  <ClearTypeBadge
+                                    value={option.clearType}
+                                    rateType={option.rateType}
+                                    size={52}
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          </div>,
+                          document.body,
+                        )
+                      }
                     </div>
                   </div>
 

@@ -36,10 +36,10 @@ class OCRRegionCropper:
     REQUIRED_REGIONS = (
         "song_name",
         "artist",
-        "difficulty",
-        "level",
-        "score_first",
-        "score_second",
+        "difficulty_level",
+        "clear_type",
+        "rate_type",
+        "score",
         "score_delta",
         "ex_score",
         "ex_score_delta",
@@ -76,35 +76,9 @@ class OCRRegionCropper:
         return loaded_regions
 
     @staticmethod
-    def _get_region_config(
-        regions: dict,
-        name: str,
-    ) -> dict:
+    def _get_region_config(regions: dict, name: str) -> dict:
         """領域名に対応する設定を取得する。"""
-        if name == "score_first":
-            score = regions.get("score")
-
-            if not isinstance(score, dict):
-                raise ValueError(
-                    "OCR region is not configured: "
-                    "ocr.regions.score"
-                )
-
-            data = score.get("first")
-
-        elif name == "score_second":
-            score = regions.get("score")
-
-            if not isinstance(score, dict):
-                raise ValueError(
-                    "OCR region is not configured: "
-                    "ocr.regions.score"
-                )
-
-            data = score.get("second")
-
-        else:
-            data = regions.get(name)
+        data = regions.get(name)
 
         if not isinstance(data, dict):
             raise ValueError(
@@ -164,7 +138,7 @@ class OCRRegionCropper:
         self,
         image_path: Path,
     ) -> dict[str, Image.Image]:
-        """結果画像から8つのOCR対象画像を切り出す。"""
+        """結果画像からOCR対象画像を切り出す。"""
         expected_size = self._get_expected_image_size()
 
         with Image.open(image_path) as image:

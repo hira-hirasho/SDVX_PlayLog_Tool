@@ -42,12 +42,10 @@ type Config = {
     regions: {
       song_name: Region
       artist: Region
-      difficulty: Region
-      level: Region
-      score: {
-        first: Region
-        second: Region
-      }
+      difficulty_level: Region
+      clear_type: Region
+      rate_type: Region
+      score: Region
       score_delta: Region
       ex_score: Region
       ex_score_delta: Region
@@ -935,204 +933,187 @@ export function SettingsView({
                 )}
 
                 {activeTab === 'ocr_regions' && (
-                  <div className="space-y-5">
-                    <SettingCard
-                      title="CAPTURE REGIONS"
-                      description="Screen regions used for detection and OCR"
-                    >
-                      <div className="space-y-3">
-                        <RegionEditor
-                          title="RESULT DETECTION"
-                          region={config.result_detection.region}
-                          onChange={(region) =>
-                            updateConfig((current) => ({
-                              ...current,
-                              result_detection: {
-                                ...current.result_detection,
-                                region,
-                              },
-                            }))
-                          }
-                        />
+                  <div className="space-y-3">
+                    <RegionEditor
+                      title="RESULT DETECTION"
+                      region={config.result_detection.region}
+                      onChange={(region) =>
+                        updateConfig((current) => ({
+                          ...current,
+                          result_detection: {
+                            ...current.result_detection,
+                            region,
+                          },
+                        }))
+                      }
+                    />
 
-                        <RegionEditor
-                          title="SONG START DETECTION"
-                          region={
-                            config.song_start_detection.region
-                          }
-                          onChange={(region) =>
-                            updateConfig((current) => ({
-                              ...current,
-                              song_start_detection: {
-                                ...current.song_start_detection,
-                                region,
-                              },
-                            }))
-                          }
-                        />
+                    <RegionEditor
+                      title="SONG START DETECTION"
+                      region={config.song_start_detection.region}
+                      onChange={(region) =>
+                        updateConfig((current) => ({
+                          ...current,
+                          song_start_detection: {
+                            ...current.song_start_detection,
+                            region,
+                          },
+                        }))
+                      }
+                    />
 
-                        <RegionEditor
-                          title="SONG NAME"
-                          region={config.ocr.regions.song_name}
-                          onChange={(region) =>
-                            updateConfig((current) => ({
-                              ...current,
-                              ocr: {
-                                ...current.ocr,
-                                regions: {
-                                  ...current.ocr.regions,
-                                  song_name: region,
-                                },
-                              },
-                            }))
-                          }
-                        />
+                    <RegionEditor
+                      title="SONG NAME"
+                      region={config.ocr.regions.song_name}
+                      onChange={(region) =>
+                        updateConfig((current) => ({
+                          ...current,
+                          ocr: {
+                            ...current.ocr,
+                            regions: {
+                              ...current.ocr.regions,
+                              song_name: region,
+                            },
+                          },
+                        }))
+                      }
+                    />
 
-                        <RegionEditor
-                          title="ARTIST"
-                          region={config.ocr.regions.artist}
-                          onChange={(region) =>
-                            updateConfig((current) => ({
-                              ...current,
-                              ocr: {
-                                ...current.ocr,
-                                regions: {
-                                  ...current.ocr.regions,
-                                  artist: region,
-                                },
-                              },
-                            }))
-                          }
-                        />
+                    <RegionEditor
+                      title="ARTIST"
+                      region={config.ocr.regions.artist}
+                      onChange={(region) =>
+                        updateConfig((current) => ({
+                          ...current,
+                          ocr: {
+                            ...current.ocr,
+                            regions: {
+                              ...current.ocr.regions,
+                              artist: region,
+                            },
+                          },
+                        }))
+                      }
+                    />
 
-                        <RegionEditor
-                          title="DIFFICULTY"
-                          region={config.ocr.regions.difficulty}
-                          onChange={(region) =>
-                            updateConfig((current) => ({
-                              ...current,
-                              ocr: {
-                                ...current.ocr,
-                                regions: {
-                                  ...current.ocr.regions,
-                                  difficulty: region,
-                                },
-                              },
-                            }))
-                          }
-                        />
+                    <RegionEditor
+                      title="DIFFICULTY / LEVEL"
+                      region={config.ocr.regions.difficulty_level}
+                      onChange={(region) =>
+                        updateConfig((current) => ({
+                          ...current,
+                          ocr: {
+                            ...current.ocr,
+                            regions: {
+                              ...current.ocr.regions,
+                              difficulty_level: region,
+                            },
+                          },
+                        }))
+                      }
+                    />
 
-                        <RegionEditor
-                          title="LEVEL"
-                          region={config.ocr.regions.level}
-                          onChange={(region) =>
-                            updateConfig((current) => ({
-                              ...current,
-                              ocr: {
-                                ...current.ocr,
-                                regions: {
-                                  ...current.ocr.regions,
-                                  level: region,
-                                },
-                              },
-                            }))
-                          }
-                        />
+                    <RegionEditor
+                      title="CLEAR TYPE"
+                      region={config.ocr.regions.clear_type}
+                      onChange={(region) =>
+                        updateConfig((current) => ({
+                          ...current,
+                          ocr: {
+                            ...current.ocr,
+                            regions: {
+                              ...current.ocr.regions,
+                              clear_type: region,
+                            },
+                          },
+                        }))
+                      }
+                    />
 
-                        <RegionEditor
-                          title="SCORE FIRST"
-                          region={config.ocr.regions.score.first}
-                          onChange={(region) =>
-                            updateConfig((current) => ({
-                              ...current,
-                              ocr: {
-                                ...current.ocr,
-                                regions: {
-                                  ...current.ocr.regions,
-                                  score: {
-                                    ...current.ocr.regions.score,
-                                    first: region,
-                                  },
-                                },
-                              },
-                            }))
-                          }
-                        />
+                    <RegionEditor
+                      title="RATE TYPE"
+                      region={config.ocr.regions.rate_type}
+                      onChange={(region) =>
+                        updateConfig((current) => ({
+                          ...current,
+                          ocr: {
+                            ...current.ocr,
+                            regions: {
+                              ...current.ocr.regions,
+                              rate_type: region,
+                            },
+                          },
+                        }))
+                      }
+                    />
 
-                        <RegionEditor
-                          title="SCORE SECOND"
-                          region={config.ocr.regions.score.second}
-                          onChange={(region) =>
-                            updateConfig((current) => ({
-                              ...current,
-                              ocr: {
-                                ...current.ocr,
-                                regions: {
-                                  ...current.ocr.regions,
-                                  score: {
-                                    ...current.ocr.regions.score,
-                                    second: region,
-                                  },
-                                },
-                              },
-                            }))
-                          }
-                        />
+                    <RegionEditor
+                      title="SCORE"
+                      region={config.ocr.regions.score}
+                      onChange={(region) =>
+                        updateConfig((current) => ({
+                          ...current,
+                          ocr: {
+                            ...current.ocr,
+                            regions: {
+                              ...current.ocr.regions,
+                              score: region,
+                            },
+                          },
+                        }))
+                      }
+                    />
 
-                        <RegionEditor
-                          title="SCORE DELTA"
-                          region={config.ocr.regions.score_delta}
-                          onChange={(region) =>
-                            updateConfig((current) => ({
-                              ...current,
-                              ocr: {
-                                ...current.ocr,
-                                regions: {
-                                  ...current.ocr.regions,
-                                  score_delta: region,
-                                },
-                              },
-                            }))
-                          }
-                        />
+                    <RegionEditor
+                      title="SCORE DELTA"
+                      region={config.ocr.regions.score_delta}
+                      onChange={(region) =>
+                        updateConfig((current) => ({
+                          ...current,
+                          ocr: {
+                            ...current.ocr,
+                            regions: {
+                              ...current.ocr.regions,
+                              score_delta: region,
+                            },
+                          },
+                        }))
+                      }
+                    />
 
-                        <RegionEditor
-                          title="EX SCORE"
-                          region={config.ocr.regions.ex_score}
-                          onChange={(region) =>
-                            updateConfig((current) => ({
-                              ...current,
-                              ocr: {
-                                ...current.ocr,
-                                regions: {
-                                  ...current.ocr.regions,
-                                  ex_score: region,
-                                },
-                              },
-                            }))
-                          }
-                        />
+                    <RegionEditor
+                      title="EX SCORE"
+                      region={config.ocr.regions.ex_score}
+                      onChange={(region) =>
+                        updateConfig((current) => ({
+                          ...current,
+                          ocr: {
+                            ...current.ocr,
+                            regions: {
+                              ...current.ocr.regions,
+                              ex_score: region,
+                            },
+                          },
+                        }))
+                      }
+                    />
 
-                        <RegionEditor
-                          title="EX SCORE DELTA"
-                          region={
-                            config.ocr.regions.ex_score_delta
-                          }
-                          onChange={(region) =>
-                            updateConfig((current) => ({
-                              ...current,
-                              ocr: {
-                                ...current.ocr,
-                                regions: {
-                                  ...current.ocr.regions,
-                                  ex_score_delta: region,
-                                },
-                              },
-                            }))
-                          }
-                        />
-                      </div>
-                    </SettingCard>
+                    <RegionEditor
+                      title="EX SCORE DELTA"
+                      region={config.ocr.regions.ex_score_delta}
+                      onChange={(region) =>
+                        updateConfig((current) => ({
+                          ...current,
+                          ocr: {
+                            ...current.ocr,
+                            regions: {
+                              ...current.ocr.regions,
+                              ex_score_delta: region,
+                            },
+                          },
+                        }))
+                      }
+                    />
                   </div>
                 )}
 
