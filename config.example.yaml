@@ -24,10 +24,10 @@ song_start_detection:
   interval_seconds: 1.0
   scale: 1.0
   region:
-    x: 572
-    y: 155
-    width: 150
-    height: 765
+    x: 1529
+    y: 710
+    width: 72
+    height: 370
 
 ocr:
   regions:

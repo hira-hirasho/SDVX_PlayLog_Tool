@@ -22,7 +22,7 @@ class ResultMonitor:
     """SDVX結果画面を定期監視する。"""
 
     # リザルト画面終了判定に必要な連続未検知回数。
-    RESULT_EXIT_MISSED_CHECKS = 3
+    RESULT_EXIT_MISSED_CHECKS = 2
 
     def __init__(
         self,
