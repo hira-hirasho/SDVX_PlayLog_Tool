@@ -138,3 +138,8 @@ html,
 body {
   margin: 0;
 }
+
+button:not(:disabled),
+a[href] {
+  cursor: pointer;
+}

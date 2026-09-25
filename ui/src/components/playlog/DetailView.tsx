@@ -155,6 +155,7 @@ export function DetailView({
   const cancelEditing = () => {
     setEditedRow(row)
     setIsEditing(false)
+    setIsClearTypePickerOpen(false)
   }
 
   const saveEditing = async () => {
@@ -768,7 +769,7 @@ export function DetailView({
                           </div>
 
                           {isEditing ? (
-                            <div className="mt-2 space-y-2">
+                            <div className="mt-1 flex h-10 min-w-0 items-end gap-3 sm:h-10">
                               <input
                                 type="number"
                                 value={editedRow.score ?? ''}
@@ -781,7 +782,7 @@ export function DetailView({
                                         : Number(event.target.value),
                                   }))
                                 }}
-                                className="w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-2xl font-black tabular-nums text-white outline-none focus:border-fuchsia-400 sm:text-3xl"
+                                className="h-10 min-w-0 flex-1 border border-fuchsia-400/50 bg-[#070a10] px-3 py-1 font-mono text-2xl font-black leading-none tabular-nums text-white outline-none focus:border-fuchsia-400 sm:text-3xl"
                               />
 
                               <input
@@ -797,7 +798,7 @@ export function DetailView({
                                   }))
                                 }}
                                 placeholder="SCORE Δ"
-                                className="w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-1.5 font-mono text-base font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400"
+                                className="h-10 w-28 shrink-0 border border-fuchsia-400/50 bg-[#070a10] px-3 py-1 font-mono text-base font-black leading-none tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400 sm:w-32"
                               />
                             </div>
                           ) : (
@@ -822,7 +823,7 @@ export function DetailView({
                           </div>
 
                           {isEditing ? (
-                            <div className="mt-2 space-y-2">
+                            <div className="mt-1 flex h-10 min-w-0 items-end gap-3 sm:h-10">
                               <input
                                 type="number"
                                 value={editedRow.ex_score ?? ''}
@@ -835,7 +836,7 @@ export function DetailView({
                                         : Number(event.target.value),
                                   }))
                                 }}
-                                className="w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-2 font-mono text-2xl font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400 sm:text-3xl"
+                                className="h-10 min-w-0 flex-1 border border-fuchsia-400/50 bg-[#070a10] px-3 py-1 font-mono text-2xl font-black leading-none tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400 sm:text-3xl"
                               />
 
                               <input
@@ -851,7 +852,7 @@ export function DetailView({
                                   }))
                                 }}
                                 placeholder="EX SCORE Δ"
-                                className="w-full border border-fuchsia-400/50 bg-[#070a10] px-3 py-1.5 font-mono text-base font-black tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400"
+                                className="h-10 w-28 shrink-0 border border-fuchsia-400/50 bg-[#070a10] px-3 py-1 font-mono text-base font-black leading-none tabular-nums text-zinc-200 outline-none focus:border-fuchsia-400 sm:w-32"
                               />
                             </div>
                           ) : (
