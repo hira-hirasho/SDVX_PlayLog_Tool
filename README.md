@@ -104,6 +104,17 @@ OBS Replay Bufferを利用して、プレイした楽曲のリプレイ動画も
 
 ---
 
+## 📣 SNSへの投稿
+
+プレイ結果や当日のプレイサマリーを、Xの投稿画面から簡単に共有できます。
+
+* 📤 個別のプレイ結果をXの投稿画面へ共有
+* 📊 当日のプレイ数・スコア更新数をまとめたTODAY'S SUMMARYを投稿
+* 🎵 曲名・アーティスト・難易度・レベル・スコアなどを自動で投稿文に反映
+* 📈 同一楽曲の当日中のスコア更新を集計してサマリーに反映
+
+---
+
 # ✦ Requirements
 
 | Requirement      | Version |
@@ -128,6 +139,33 @@ OBS Replay Bufferを利用して、プレイした楽曲のリプレイ動画も
 セットアップ後の詳細な設定は以下を参照してください。
 
 👉 [セットアップ手順（SETUP.md）](SETUP.md)
+
+---
+
+# ✦ Configuration
+
+アプリの設定は、**専用の設定画面から変更できます。**
+
+設定ファイルを直接編集する必要はありません。
+
+<p align="center">
+  <img src="asset/screenshots/settings.png" width="900">
+</p>
+
+設定画面では、以下の項目を変更できます。
+
+* ⌨️ プレイ結果保存に使用するキー
+* 🎥 OBS Studioの実行ファイル・WebSocket・シーン設定
+* 🔍 リザルト画面・楽曲開始画面の検出設定
+* 📝 OCRの各種設定
+* 🎯 スコア保存の最低値
+* ⚙️ その他のアプリケーション設定
+
+設定内容は `%LOCALAPPDATA%\SDVX PlayLog Tool\config.yaml` に保存されます。
+
+> `config.yaml` はアプリが管理する設定ファイルです。通常の利用では直接編集する必要はありません。
+
+OBS WebSocketのパスワードのみ、`.env` の `OBS_WEBSOCKET_PASSWORD` に設定します。
 
 ---
 
@@ -158,32 +196,6 @@ npm run build
 ```powershell
 cd ui
 npm run dist
-```
-
----
-
-# ✦ Configuration
-
-個人環境の設定は `%LOCALAPPDATA%\SDVX PlayLog Tool\config.yaml` で行います。
-
-サンプル設定は `config.example.yaml` を使用します。
-
-OBS WebSocketのパスワードは `.env` の `OBS_WEBSOCKET_PASSWORD` に設定します。
-
-```text
-%LOCALAPPDATA%\SDVX PlayLog Tool\
-│
-└── config.yaml
-     │
-     ├── アプリ設定
-     │
-     └── 個人環境設定
-
-プロジェクトルート\
-│
-└── .env
-     │
-     └── OBS WebSocket Password
 ```
 
 ---
