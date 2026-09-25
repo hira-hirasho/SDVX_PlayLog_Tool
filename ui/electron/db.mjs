@@ -74,7 +74,7 @@ export function getPlayLogs({
         ex_score_delta
       FROM play_log
       ${whereClause}
-      ORDER BY played_at DESC
+      ORDER BY played_at DESC, play_id DESC
       LIMIT @limit
       OFFSET @offset
     `)
@@ -97,6 +97,153 @@ export function getPlayLogs({
   return {
     rows,
     total: total.count,
+  }
+}
+
+export function getAdjacentPlayLogs({
+  playId,
+  startDate = null,
+  endDate = null,
+  songName = null,
+  artist = null,
+  scoreImproved = true,
+} = {}) {
+  const db = getDatabase()
+
+  try {
+    const conditions = []
+    const params = {
+      playId,
+    }
+
+    if (startDate) {
+      conditions.push('played_at >= @startDate')
+      params.startDate = `${startDate}T00:00:00`
+    }
+
+    if (endDate) {
+      conditions.push('played_at < @endDate')
+      params.endDate = `${endDate}T00:00:00`
+    }
+
+    if (songName) {
+      conditions.push('song_name LIKE @songName')
+      params.songName = `%${songName}%`
+    }
+
+    if (artist) {
+      conditions.push('artist LIKE @artist')
+      params.artist = `%${artist}%`
+    }
+
+    if (scoreImproved) {
+      conditions.push(
+        '(score_delta > 0 OR ex_score_delta > 0)',
+      )
+    }
+
+    const whereClause =
+      conditions.length > 0
+        ? `WHERE ${conditions.join(' AND ')}`
+        : ''
+
+    const current = db
+      .prepare(`
+        SELECT
+          played_at,
+          play_id
+        FROM play_log
+        WHERE play_id = @playId
+      `)
+      .get({ playId })
+
+    if (!current) {
+      return {
+        previous: null,
+        next: null,
+      }
+    }
+
+    const filteredConditions = [...conditions]
+
+    const previousParams = {
+      ...params,
+      currentPlayedAt: current.played_at,
+      currentPlayId: current.play_id,
+    }
+
+    const nextParams = {
+      ...params,
+      currentPlayedAt: current.played_at,
+      currentPlayId: current.play_id,
+    }
+
+    const previousConditions = [
+      ...filteredConditions,
+      `(
+        played_at > @currentPlayedAt
+        OR (
+          played_at = @currentPlayedAt
+          AND play_id > @currentPlayId
+        )
+      )`,
+    ]
+
+    const nextConditions = [
+      ...filteredConditions,
+      `(
+        played_at < @currentPlayedAt
+        OR (
+          played_at = @currentPlayedAt
+          AND play_id < @currentPlayId
+        )
+      )`,
+    ]
+
+    const previousWhere = `WHERE ${previousConditions.join(' AND ')}`
+    const nextWhere = `WHERE ${nextConditions.join(' AND ')}`
+
+    const selectColumns = `
+      SELECT
+        play_id,
+        played_at,
+        song_name,
+        artist,
+        difficulty,
+        level,
+        clear_type,
+        rate_type,
+        score,
+        score_delta,
+        ex_score,
+        ex_score_delta
+      FROM play_log
+    `
+
+    const previous = db
+      .prepare(`
+        ${selectColumns}
+        ${previousWhere}
+        ORDER BY played_at ASC, play_id ASC
+        LIMIT 1
+      `)
+      .get(previousParams) ?? null
+
+    const next = db
+      .prepare(`
+        ${selectColumns}
+        ${nextWhere}
+        ORDER BY played_at DESC, play_id DESC
+        LIMIT 1
+      `)
+      .get(nextParams) ?? null
+
+    return {
+      previous,
+      next,
+    }
+  } finally {
+    db.close()
   }
 }
 

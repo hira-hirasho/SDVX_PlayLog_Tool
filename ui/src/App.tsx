@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BarChart3 } from "lucide-react"
 
 import { ScoreCard } from './components/playlog/ScoreCard'
@@ -19,7 +19,9 @@ export default function App() {
   const {
     selectedId,
     showSettings,
+    navigationRow,
     openDetail,
+    openHistory,
     openSettings,
     goBack,
   } = usePlayLogNavigation()
@@ -73,8 +75,7 @@ export default function App() {
   }, [showSettings, selectedId, refresh])
 
   const handleBack = () => {
-    goBack()
-    refresh()
+    openHistory()
   }
 
   const totalPages = Math.ceil(total / pageSize)
@@ -158,6 +159,82 @@ export default function App() {
     [rows, selectedId],
   )
 
+  const detailRow = navigationRow ?? selectedRow
+
+  const [detailNavigation, setDetailNavigation] = useState({
+    previous: false,
+    next: false,
+  })
+
+  const navigateDetail = async (
+    direction: 'previous' | 'next',
+  ) => {
+    if (!detailRow) {
+      return
+    }
+
+    const result = await window.api.getAdjacentPlayLogs({
+      playId: detailRow.play_id,
+      startDate: startDate || null,
+      endDate: endDate || null,
+      songName: songName || null,
+      artist: artist || null,
+      scoreImproved,
+    })
+
+    const target =
+      direction === 'previous'
+        ? result.previous
+        : result.next
+
+    if (!target) {
+      return
+    }
+
+    openDetail(target)
+  }
+
+  useEffect(() => {
+    if (!detailRow) {
+      return
+    }
+
+    let cancelled = false
+
+    const loadDetailNavigation = async () => {
+      const result = await window.api.getAdjacentPlayLogs({
+        playId: detailRow.play_id,
+        startDate: startDate || null,
+        endDate: endDate || null,
+        songName: songName || null,
+        artist: artist || null,
+        scoreImproved,
+      })
+
+      if (cancelled) {
+        return
+      }
+
+      setDetailNavigation({
+        previous: result.previous !== null,
+        next: result.next !== null,
+      })
+    }
+
+    void loadDetailNavigation()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    detailRow,
+    startDate,
+    endDate,
+    songName,
+    artist,
+    scoreImproved,
+  ])
+
   if (showSettings) {
     return (
       <SettingsView
@@ -166,13 +243,17 @@ export default function App() {
     )
   }
 
-  if (selectedId && selectedRow) {
+  if (selectedId && detailRow) {
     return (
       <DetailView
-        row={selectedRow}
+        key={detailRow.play_id}
+        row={detailRow}
         onBack={handleBack}
         onUpdated={refresh}
         onSettings={openSettings}
+        onNavigate={navigateDetail}
+        hasPrevious={detailNavigation.previous}
+        hasNext={detailNavigation.next}
       />
     )
   }
@@ -377,7 +458,7 @@ export default function App() {
                   <ScoreCard
                     key={row.play_id}
                     row={row}
-                    onClick={() => openDetail(row.play_id)}
+                    onClick={() => openDetail(row)}
                   />
                 ))}
               </div>

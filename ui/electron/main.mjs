@@ -20,6 +20,7 @@ import {
 } from './paths.mjs'
 import {
   getPlayLogs,
+  getAdjacentPlayLogs,
   getTodaysPlaySummary,
   updatePlayLog,
   deletePlayLog,
@@ -90,28 +91,6 @@ if (!gotTheLock) {
       )
       win.loadFile(indexPath)
     }
-
-    win.webContents.on('before-input-event', (event, input) => {
-      if (input.type !== 'mouseDown') return
-
-      if (input.button === 'X1') {
-        event.preventDefault()
-
-        if (win.webContents.canGoBack()) {
-          win.webContents.goBack()
-        }
-
-        return
-      }
-
-      if (input.button === 'X2') {
-        event.preventDefault()
-
-        if (win.webContents.canGoForward()) {
-          win.webContents.goForward()
-        }
-      }
-    })
   }
 
   ipcMain.handle('config:get', () => {
@@ -233,6 +212,13 @@ if (!gotTheLock) {
       rows,
     }
   })
+
+  ipcMain.handle(
+    'play-log:get-adjacent',
+    (_event, options) => {
+      return getAdjacentPlayLogs(options)
+    },
+  )
 
   ipcMain.handle(
     'play-log:get-todays-summary',

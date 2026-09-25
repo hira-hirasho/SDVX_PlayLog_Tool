@@ -24,6 +24,12 @@ contextBridge.exposeInMainWorld('api', {
       options,
     ),
 
+  getAdjacentPlayLogs: (options) =>
+    ipcRenderer.invoke(
+      'play-log:get-adjacent',
+      options,
+    ),
+
   getTodaysPlaySummary: (date) =>
     ipcRenderer.invoke(
       'play-log:get-todays-summary',

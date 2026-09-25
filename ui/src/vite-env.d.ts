@@ -2,6 +2,7 @@
 
 import type {
   PlayLogListResult,
+  PlayLogRow,
 } from './types/playLog'
 
 declare global {
@@ -29,6 +30,18 @@ declare global {
         artist?: string | null
         scoreImproved?: boolean
       }) => Promise<PlayLogListResult>
+
+      getAdjacentPlayLogs: (options: {
+        playId: string
+        startDate?: string | null
+        endDate?: string | null
+        songName?: string | null
+        artist?: string | null
+        scoreImproved?: boolean
+      }) => Promise<{
+        previous: PlayLogRow | null
+        next: PlayLogRow | null
+      }>
 
       getTodaysPlaySummary: (date: string) => Promise<{
         played: number
