@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { BarChart3 } from "lucide-react"
 
 import { ScoreCard } from './components/playlog/ScoreCard'
@@ -57,6 +57,20 @@ export default function App() {
     artist,
     scoreImproved,
   })
+
+  useEffect(() => {
+    if (showSettings || selectedId) {
+      return
+    }
+
+    const intervalId = window.setInterval(() => {
+      refresh()
+    }, 1 * 60 * 1000) // 1分間隔で更新
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [showSettings, selectedId, refresh])
 
   const handleBack = () => {
     goBack()
