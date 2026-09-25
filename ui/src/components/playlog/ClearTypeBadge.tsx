@@ -13,9 +13,17 @@ type BadgeStyle = {
 }
 
 function getBadgeStyle(
-  value: ClearType,
+  value: ClearType | null,
   rateType: RateType | null,
 ): BadgeStyle {
+  if (!value) {
+    return {
+      label: '',
+      color: '#68737d',
+      opacity: 0.55,
+    }
+  }
+
   switch (value) {
     case 'COMPLETE':
       switch (rateType) {
@@ -70,10 +78,6 @@ export function ClearTypeBadge({
   rateType,
   size,
 }: Props) {
-  if (!value) {
-    return null
-  }
-
   const style = getBadgeStyle(value, rateType)
   const badgeSize = size ?? 48
   const id = `clear-type-${value}-${style.color.replace('#', '')}`
@@ -85,7 +89,7 @@ export function ClearTypeBadge({
         width: size ?? 48,
         height: size ?? 48,
       }}
-      aria-label={value}
+      aria-label={value ?? '未設定'}
     >
       <svg
         viewBox="0 0 64 64"
