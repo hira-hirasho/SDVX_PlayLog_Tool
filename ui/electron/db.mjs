@@ -107,6 +107,8 @@ export function updatePlayLog(
     artist,
     difficulty,
     level,
+    clear_type,
+    rate_type,
     score,
     score_delta,
     ex_score,
