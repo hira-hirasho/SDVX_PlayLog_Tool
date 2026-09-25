@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import io
 import math
+import subprocess
+import sys
 import time
 import wave
 import winsound
@@ -221,7 +223,6 @@ class SDVXPlayLogApp:
             media_root=media_root,
         )
 
-
         self._media_job_runner = MediaJobRunner(
             processor=self._media_processor,
             on_completed=self._on_media_job_completed,
@@ -245,6 +246,7 @@ class SDVXPlayLogApp:
         # ------------------------------------------------------------
         self._running = True
         self._accepting_work = False
+        self._restart_requested = False
 
         # SongStart検出時刻。
         # F12受信時刻との差分からReplayのトリミング位置を算出する。
@@ -298,6 +300,9 @@ class SDVXPlayLogApp:
             )
         finally:
             self._shutdown()
+
+        if self._restart_requested:
+            self._restart()
 
     def _activate(self) -> None:
         """SDVX起動時のACTIVE化処理。"""
@@ -403,6 +408,15 @@ class SDVXPlayLogApp:
                     checked=lambda item: not self._is_tray_enabled(),
                     radio=True,
                 ),
+                pystray.Menu.SEPARATOR,
+                pystray.MenuItem(
+                    "再起動",
+                    self._on_tray_restart,
+                ),
+                pystray.MenuItem(
+                    "終了",
+                    self._on_tray_exit,
+                ),
             )
 
             self._tray_icon = pystray.Icon(
@@ -467,6 +481,32 @@ class SDVXPlayLogApp:
 
         if self._state_manager.state == AppState.ACTIVE:
             self._deactivate()
+
+    def _on_tray_restart(
+        self,
+        _icon,
+        _item,
+    ) -> None:
+        """トレイからバックエンドを再起動する。"""
+        logger.info(
+            "TRAY: application restart requested"
+        )
+
+        self._restart_requested = True
+        self._running = False
+
+    def _on_tray_exit(
+        self,
+        _icon,
+        _item,
+    ) -> None:
+        """トレイからバックエンドを終了する。"""
+        logger.info(
+            "TRAY: application exit requested"
+        )
+
+        self._restart_requested = False
+        self._running = False
 
     def _shutdown(self) -> None:
         """アプリケーション終了処理。"""
@@ -1055,6 +1095,25 @@ class SDVXPlayLogApp:
                 "APP: failed to stop result monitor"
             )
 
+    def _restart(self) -> None:
+        """現在のプロセスを終了してバックエンドを再起動する。"""
+        logger.info("APP: restarting process")
+
+        try:
+            script_path = Path(__file__).resolve()
+
+            subprocess.Popen(
+                [sys.executable, str(script_path)],
+                cwd=str(script_path.parent),
+                close_fds=True,
+            )
+
+            logger.info("APP: restart process launched")
+
+        except Exception:
+            logger.exception(
+                "APP: failed to launch restart process"
+            )
 
 def main() -> None:
     setup_logger()
