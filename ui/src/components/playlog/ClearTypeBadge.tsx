@@ -42,6 +42,7 @@ function getBadgeStyle(
           }
 
         case 'EFFECTIVE RATE':
+        case 'OTHER':
         default:
           return {
             label: 'COMP',

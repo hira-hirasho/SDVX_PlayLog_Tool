@@ -8,6 +8,7 @@ export type RateType =
   | 'EFFECTIVE RATE'
   | 'EXCESSIVE RATE'
   | 'MAXXIVE RATE'
+  | 'OTHER'
 
 export type PlayLogRow = {
   play_id: string

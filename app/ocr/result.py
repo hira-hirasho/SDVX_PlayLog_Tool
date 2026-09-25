@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from difflib import SequenceMatcher
 
 
 @dataclass
@@ -202,14 +203,9 @@ def parse_difficulty_level(
     return difficulty, level
 
 
-def normalize_clear_type(
-    value: str | None,
-) -> str | None:
-    """OCRで取得したクリアタイプを正規化する。"""
-    if value is None:
-        return None
-
-    text = (
+def _normalize_ocr_candidate(value: str) -> str:
+    """OCR文字列を候補比較用に正規化する。"""
+    return (
         value
         .strip()
         .upper()
@@ -218,29 +214,72 @@ def normalize_clear_type(
         .replace("-", "")
     )
 
-    if text in {
-        "COMPLETE",
-        "ULTIMATECHAIN",
-        "PERFECT",
-        "CRASH",
-    }:
-        return text
 
-    return None
-
-
-def normalize_rate_type(value: str | None) -> str | None:
-    """OCRで取得したRATE種別を正規化する。"""
+def _find_closest_candidate(
+    value: str | None,
+    candidates: tuple[str, ...],
+    threshold: float,
+) -> str | None:
+    """OCR文字列から最も類似する候補を取得する。"""
     if value is None:
         return None
 
-    text = " ".join(value.strip().upper().split())
+    text = _normalize_ocr_candidate(value)
 
-    if text in {
-        "EFFECTIVE RATE",
-        "EXCESSIVE RATE",
-        "MAXXIVE RATE",
-    }:
-        return text
+    if not text:
+        return None
 
-    return None
+    best_candidate: str | None = None
+    best_similarity = 0.0
+
+    for candidate in candidates:
+        normalized_candidate = _normalize_ocr_candidate(candidate)
+
+        similarity = SequenceMatcher(
+            None,
+            text,
+            normalized_candidate,
+        ).ratio()
+
+        if similarity > best_similarity:
+            best_similarity = similarity
+            best_candidate = candidate
+
+    if best_similarity < threshold:
+        return None
+
+    return best_candidate
+
+
+def normalize_clear_type(
+    value: str | None,
+) -> str | None:
+    """OCRで取得したクリアタイプを類似度ベースで正規化する。"""
+    return _find_closest_candidate(
+        value,
+        (
+            "COMPLETE",
+            "ULTIMATECHAIN",
+            "PERFECT",
+            "CRASH",
+        ),
+        threshold=0.75,
+    )
+
+
+def normalize_rate_type(
+    value: str | None,
+) -> str:
+    """OCRで取得したRATE種別を類似度ベースで正規化する。"""
+    return (
+        _find_closest_candidate(
+            value,
+            (
+                "EFFECTIVE RATE",
+                "EXCESSIVE RATE",
+                "MAXXIVE RATE",
+            ),
+            threshold=0.75,
+        )
+        or "OTHER"
+    )

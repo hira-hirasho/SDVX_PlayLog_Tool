@@ -50,6 +50,7 @@ declare global {
             | 'EFFECTIVE RATE'
             | 'EXCESSIVE RATE'
             | 'MAXXIVE RATE'
+            | 'OTHER'
             | null
           score: number | null
           score_delta: number | null
@@ -96,6 +97,7 @@ declare global {
             | 'EFFECTIVE RATE'
             | 'EXCESSIVE RATE'
             | 'MAXXIVE RATE'
+            | 'OTHER'
             | null
           score: number | null
           score_delta: number | null
