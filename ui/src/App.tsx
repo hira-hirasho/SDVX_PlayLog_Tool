@@ -14,6 +14,8 @@ import { SystemBackground } from './components/effects/SystemBackground'
 import { SystemSidebar } from './components/layout/SystemSidebar'
 import { LogTerminal } from './components/log/LogTerminal'
 
+import type { PlayLogRow } from './types/playLog'
+
 
 export default function App() {
 
@@ -162,8 +164,19 @@ export default function App() {
     () => rows.find((row) => row.play_id === selectedId) ?? null,
     [rows, selectedId],
   )
-
-  const detailRow = navigationRow ?? selectedRow
+  
+  const [updatedDetail, setUpdatedDetail] = useState<{
+    playId: string
+    row: PlayLogRow
+  } | null>(null)
+  
+  const baseDetailRow = navigationRow ?? selectedRow
+  
+  const detailRow =
+    baseDetailRow &&
+    updatedDetail?.playId === baseDetailRow.play_id
+      ? updatedDetail.row
+      : baseDetailRow
 
   const [detailNavigation, setDetailNavigation] = useState({
     previous: false,
@@ -253,7 +266,13 @@ export default function App() {
         key={detailRow.play_id}
         row={detailRow}
         onBack={handleBack}
-        onUpdated={refresh}
+        onUpdated={(updatedRow) => {
+          setUpdatedDetail({
+            playId: updatedRow.play_id,
+            row: updatedRow,
+          })
+          void refresh()
+        }}
         onSettings={openSettings}
         onNavigate={navigateDetail}
         hasPrevious={detailNavigation.previous}

@@ -32,7 +32,7 @@ export function DetailView({
 }: {
   row: PlayLogRow
   onBack: () => void
-  onUpdated: () => void
+  onUpdated: (updatedRow: PlayLogRow) => void
   onSettings: () => void
   onNavigate: (
     direction: 'previous' | 'next',
@@ -187,7 +187,8 @@ export function DetailView({
       }
 
       setIsEditing(false)
-      onUpdated()
+      setIsClearTypePickerOpen(false)
+      onUpdated(editedRow)
     } catch (error) {
       console.error('Failed to update play log:', error)
     } finally {
