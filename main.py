@@ -55,10 +55,8 @@ from app.sdvx.process_detector import is_sdvx_running
 class SDVXPlayLogApp:
     """SDVX PlayLog本体。"""
 
-    def __init__(self) -> None:
-        load_environment()
-
-        self._config = load_config()
+    def __init__(self, config) -> None:
+        self._config = config
         self._state_manager = StateManager()
 
         # ------------------------------------------------------------
@@ -1114,13 +1112,25 @@ class SDVXPlayLogApp:
             )
 
 def main() -> None:
-    setup_logger()
+    load_environment()
+
+    config = load_config()
+
+    setup_logger(
+        log_level=config.get(
+            "logging",
+            "level",
+            default="INFO",
+        )
+    )
 
     if not acquire_single_instance():
         return
 
     try:
-        app = SDVXPlayLogApp()
+        app = SDVXPlayLogApp(
+            config=config,
+        )
         app.run()
     finally:
         release_single_instance()

@@ -7,6 +7,16 @@ import { SystemPageHeader } from '../layout/SystemPageHeader'
 import { SystemSidebar } from '../layout/SystemSidebar'
 import { LogTerminal } from '../log/LogTerminal'
 
+const LOG_LEVELS = [
+  'DEBUG',
+  'INFO',
+  'WARNING',
+  'ERROR',
+  'CRITICAL',
+] as const
+
+type LogLevel = (typeof LOG_LEVELS)[number]
+
 type Region = {
   x: number
   y: number
@@ -15,6 +25,9 @@ type Region = {
 }
 
 type Config = {
+  logging: {
+    level: string
+  }
   input: {
     trigger_key: string
   }
@@ -94,6 +107,30 @@ function TextInput({
       onChange={(event) => onChange(event.target.value)}
       className="w-full border border-zinc-800 bg-[#05080d] px-3.5 py-3 font-mono text-sm text-zinc-200 outline-none transition focus:border-cyan-400/60"
     />
+  )
+}
+
+function SelectInput({
+  value,
+  options,
+  onChange,
+}: {
+  value: string
+  options: readonly string[]
+  onChange: (value: string) => void
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className="w-full border border-zinc-800 bg-[#05080d] px-3.5 py-3 font-mono text-sm text-zinc-200 outline-none transition focus:border-cyan-400/60"
+    >
+      {options.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
   )
 }
 
@@ -615,6 +652,35 @@ export function SettingsView({
                           </SettingHint>
                         </label>
                       </div>
+                    </SettingCard>
+
+                    <SettingCard
+                      title="LOGGING"
+                      description="Application log output"
+                    >
+                      <label className="block max-w-md space-y-2">
+                        <SettingLabel>
+                          Log Level
+                        </SettingLabel>
+
+                        <SelectInput
+                          value={config.logging.level}
+                          options={LOG_LEVELS}
+                          onChange={(value) =>
+                            updateConfig((current) => ({
+                              ...current,
+                              logging: {
+                                ...current.logging,
+                                level: value as LogLevel,
+                              },
+                            }))
+                          }
+                        />
+
+                        <SettingHint>
+                          出力するログの最低レベルです。DEBUGにすると詳細なデバッグログも出力されます。
+                        </SettingHint>
+                      </label>
                     </SettingCard>
 
                     <SettingCard
