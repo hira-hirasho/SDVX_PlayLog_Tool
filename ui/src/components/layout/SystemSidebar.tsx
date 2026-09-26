@@ -1,9 +1,11 @@
-import { Settings } from 'lucide-react'
+import { Settings, Terminal } from 'lucide-react'
 
 import { useSystemReady } from '../../hooks/useSystemReady'
 
 type SystemSidebarProps = {
   onSettings: () => void
+  onTerminal: () => void
+  terminalOpen: boolean
   section: {
     index: string
     label: string
@@ -12,6 +14,8 @@ type SystemSidebarProps = {
 
 export function SystemSidebar({
   onSettings,
+  onTerminal,
+  terminalOpen,
   section,
 }: SystemSidebarProps) {
   const systemReady = useSystemReady()
@@ -72,7 +76,29 @@ export function SystemSidebar({
         </div>
       </div>
 
-      <div className="mt-auto mb-6 flex flex-col items-center">
+      <div className="mt-auto mb-6 flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={onTerminal}
+          aria-label={terminalOpen ? 'Close terminal' : 'Open terminal'}
+          title={terminalOpen ? 'Close terminal' : 'Terminal'}
+          className={`group relative flex h-10 w-10 items-center justify-center border bg-[#070a10] transition ${
+            terminalOpen
+              ? 'border-cyan-400/60 text-cyan-300'
+              : 'border-zinc-800 text-zinc-500 hover:border-cyan-400/60 hover:text-cyan-300'
+          }`}
+        >
+          <span
+            className={`absolute left-0 top-0 h-px bg-cyan-400/60 transition-all ${
+              terminalOpen ? 'w-full' : 'w-4 group-hover:w-full'
+            }`}
+          />
+          <Terminal
+            size={17}
+            strokeWidth={1.8}
+          />
+        </button>
+
         <button
           type="button"
           onClick={onSettings}

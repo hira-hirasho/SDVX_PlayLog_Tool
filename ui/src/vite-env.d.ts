@@ -80,6 +80,20 @@ declare global {
         response: number
       }>
 
+      openLogTerminal: () => Promise<{
+        exists: boolean
+        fileName: string
+        content: string
+      }>
+
+      readLogTerminal: () => Promise<{
+        exists: boolean
+        fileName: string
+        content: string
+      } | null>
+
+      closeLogTerminal: () => Promise<void>
+
       getPlayMedia: (playId: string) => Promise<{
         resultImage: string | null
         replayVideo: string | null

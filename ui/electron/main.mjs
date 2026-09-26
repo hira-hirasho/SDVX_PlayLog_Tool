@@ -31,6 +31,8 @@ const __dirname = path.dirname(__filename)
 
 const isDev = !app.isPackaged
 
+let logTerminalOpen = false
+
 protocol.registerSchemesAsPrivileged([
   {
     scheme: 'sdvx-media',
@@ -187,6 +189,103 @@ if (!gotTheLock) {
       return {
         response: result.response,
       }
+    },
+  )
+
+  ipcMain.handle(
+    'log:open',
+    async () => {
+      logTerminalOpen = true
+
+      const now = new Date()
+
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+
+      const fileName = `${year}${month}${day}.log`
+
+      const logPath = path.join(
+        getDataRoot(),
+        'logs',
+        fileName,
+      )
+
+      try {
+        const content = await fs.promises.readFile(
+          logPath,
+          'utf-8',
+        )
+
+        return {
+          exists: true,
+          fileName,
+          content,
+        }
+      } catch (error) {
+        if (error?.code === 'ENOENT') {
+          return {
+            exists: false,
+            fileName,
+            content: '',
+          }
+        }
+
+        throw error
+      }
+    },
+  )
+
+  ipcMain.handle(
+    'log:read',
+    async () => {
+      if (!logTerminalOpen) {
+        return null
+      }
+
+      const now = new Date()
+
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+
+      const fileName = `${year}${month}${day}.log`
+
+      const logPath = path.join(
+        getDataRoot(),
+        'logs',
+        fileName,
+      )
+
+      try {
+        const content = await fs.promises.readFile(
+          logPath,
+          'utf-8',
+        )
+
+        return {
+          exists: true,
+          fileName,
+          content,
+        }
+      } catch (error) {
+        if (error?.code === 'ENOENT') {
+          return {
+            exists: false,
+            fileName,
+            content: '',
+          }
+        }
+
+        throw error
+      }
+    },
+  )
+
+  ipcMain.handle(
+    'log:close',
+    () => {
+      logTerminalOpen = false
     },
   )
 

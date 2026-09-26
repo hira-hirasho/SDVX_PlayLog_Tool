@@ -42,6 +42,21 @@ contextBridge.exposeInMainWorld('api', {
       options,
     ),
 
+  openLogTerminal: () =>
+    ipcRenderer.invoke(
+      'log:open',
+    ),
+
+  readLogTerminal: () =>
+    ipcRenderer.invoke(
+      'log:read',
+    ),
+
+  closeLogTerminal: () =>
+    ipcRenderer.invoke(
+      'log:close',
+    ),
+
   getPlayMedia: (playId) =>
     ipcRenderer.invoke(
       'play-log:get-media',

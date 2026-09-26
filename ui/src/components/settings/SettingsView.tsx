@@ -5,6 +5,7 @@ import { FolderOpen, Keyboard, Save } from 'lucide-react'
 import { SystemBackground } from '../effects/SystemBackground'
 import { SystemPageHeader } from '../layout/SystemPageHeader'
 import { SystemSidebar } from '../layout/SystemSidebar'
+import { LogTerminal } from '../log/LogTerminal'
 
 type Region = {
   x: number
@@ -354,14 +355,8 @@ export function SettingsView({
     useState<SettingsTab>('main')
   const [listeningForKey, setListeningForKey] =
     useState(false)
-
-  useEffect(() => {
-    document.documentElement.style.overflowY = 'scroll'
-
-    return () => {
-      document.documentElement.style.overflowY = ''
-    }
-  }, [])
+  const [showLogTerminal, setShowLogTerminal] =
+    useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -512,16 +507,18 @@ export function SettingsView({
   }
 
   return (
-    <div className="min-h-screen bg-[#03050a] text-zinc-100">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-[#03050a] text-zinc-100">
       <SystemSidebar
         onSettings={() => undefined}
+        onTerminal={() => setShowLogTerminal((open) => !open)}
+        terminalOpen={showLogTerminal}
         section={{
           index: '00',
           label: 'SETTINGS',
         }}
       />
 
-      <main className="relative min-h-screen lg:pl-18">
+      <main className="relative min-h-0 flex-1 overflow-y-auto lg:pl-18">
         <SystemBackground />
 
         <div className="relative">
@@ -1153,6 +1150,12 @@ export function SettingsView({
           </div>
         </div>
       </main>
+
+      {showLogTerminal && (
+            <LogTerminal
+              onClose={() => setShowLogTerminal(false)}
+            />
+          )}
     </div>
   )
 }

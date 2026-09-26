@@ -6,6 +6,7 @@ import type { PlayLogRow } from '../../types/playLog'
 import { SystemBackground } from '../effects/SystemBackground'
 import { SystemPageHeader } from '../layout/SystemPageHeader'
 import { SystemSidebar } from '../layout/SystemSidebar'
+import { LogTerminal } from '../log/LogTerminal'
 
 import { ClearTypeBadge } from './ClearTypeBadge'
 import { GradeBadge } from './GradeBadge'
@@ -96,6 +97,9 @@ export function DetailView({
   const [deleteTarget, setDeleteTarget] = useState<MediaType | null>(null)
   const [isDeletingMedia, setIsDeletingMedia] = useState(false)
   const [mediaDeleteError, setMediaDeleteError] = useState<string | null>(null)
+
+  const [showLogTerminal, setShowLogTerminal] =
+    useState(false)
 
   const dragStartRef = useRef({ x: 0, y: 0 })
   const offsetStartRef = useRef({ x: 0, y: 0 })
@@ -388,16 +392,18 @@ export function DetailView({
     <>
       <SystemSidebar
         onSettings={onSettings}
+        onTerminal={() => setShowLogTerminal((open) => !open)}
+        terminalOpen={showLogTerminal}
         section={{
           index: '02',
           label: 'RECORD',
         }}
       />
 
-      <div className="plg-page-in relative min-h-screen overflow-hidden bg-[#03050a] text-zinc-100">
+      <div className="plg-page-in relative flex h-screen flex-col overflow-hidden bg-[#03050a] text-zinc-100">
         <SystemBackground />
 
-        <div className="relative lg:pl-18">
+        <div className="relative min-h-0 flex-1 overflow-y-auto lg:pl-18">
           {/* Header */}
           <SystemPageHeader
             label="RECORD DETAIL"
@@ -1381,6 +1387,12 @@ export function DetailView({
 
           <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-px bg-linear-to-r from-cyan-400/40 via-zinc-800 to-fuchsia-400/40" />
         </div>
+
+        {showLogTerminal && (
+            <LogTerminal
+              onClose={() => setShowLogTerminal(false)}
+            />
+          )}
       </div>
     </>
   )

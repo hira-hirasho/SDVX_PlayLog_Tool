@@ -12,6 +12,7 @@ import { DetailView } from './components/playlog/DetailView'
 import { SettingsView } from './components/settings/SettingsView'
 import { SystemBackground } from './components/effects/SystemBackground'
 import { SystemSidebar } from './components/layout/SystemSidebar'
+import { LogTerminal } from './components/log/LogTerminal'
 
 
 export default function App() {
@@ -48,6 +49,9 @@ export default function App() {
   // Single boot-up moment on first mount — echoes an arcade cabinet coming
   // online. Everything else on this page stays still.
   const systemReady = useSystemReady()
+
+  const [showLogTerminal, setShowLogTerminal] =
+    useState(false)
 
   const { page, setPage } = usePagination()
 
@@ -267,16 +271,18 @@ export default function App() {
     <>
       <SystemSidebar
         onSettings={openSettings}
+        onTerminal={() => setShowLogTerminal((open) => !open)}
+        terminalOpen={showLogTerminal}
         section={{
           index: '01',
           label: 'DATABASE',
         }}
       />
 
-      <div className="plg-page-in relative min-h-screen bg-[#03050a] text-zinc-100">
+      <div className="plg-page-in relative flex h-screen flex-col overflow-hidden bg-[#03050a] text-zinc-100">
         <SystemBackground />
 
-        <div className="relative lg:pl-18">
+        <div className="relative min-h-0 flex-1 overflow-y-auto lg:pl-18">
           {/* Header */}
           <header className="relative overflow-hidden border-b border-zinc-900 bg-[#060910]/95">
             {/* Top neon rail */}
@@ -507,6 +513,12 @@ export default function App() {
             )}
           </main>
         </div>
+
+        {showLogTerminal && (
+            <LogTerminal
+              onClose={() => setShowLogTerminal(false)}
+            />
+          )}
       </div>
     </>
   )
