@@ -25,6 +25,7 @@ from app.core.config import (
 from app.core.data_paths import resolve_data_path
 from app.core.f12_detector import F12Detector
 from app.core.logger import setup_logger
+from app.core.roi import ROI, rotate_left_90_roi
 from app.core.single_instance import (
     acquire_single_instance,
     release_single_instance,
@@ -83,20 +84,26 @@ class SDVXPlayLogApp:
         # ------------------------------------------------------------
 
         # Windows画面からリザルト判定用ROIを取得する。
-        #
-        # リザルト画面全体の保存用画像もResultDetectionCaptureが
-        # Windowsから直接取得するため、OBS ImageCaptureは使用しない。
         result_region = self._config.get(
             "result_detection",
             "region",
             default={},
         )
 
+        result_roi = rotate_left_90_roi(
+            ROI(
+                x=int(result_region.get("x", 0)),
+                y=int(result_region.get("y", 0)),
+                width=int(result_region.get("width", 0)),
+                height=int(result_region.get("height", 0)),
+            )
+        )
+
         self._result_detection_capture = ResultDetectionCapture(
-            x=int(result_region.get("x", 0)),
-            y=int(result_region.get("y", 0)),
-            width=int(result_region.get("width", 0)),
-            height=int(result_region.get("height", 0)),
+            x=result_roi.x,
+            y=result_roi.y,
+            width=result_roi.width,
+            height=result_roi.height,
         )
 
         self._result_detector = ResultScreenDetector(
@@ -114,6 +121,16 @@ class SDVXPlayLogApp:
             "region",
             default={},
         )
+
+        song_start_roi = rotate_left_90_roi(
+            ROI(
+                x=int(song_start_region.get("x", 0)),
+                y=int(song_start_region.get("y", 0)),
+                width=int(song_start_region.get("width", 0)),
+                height=int(song_start_region.get("height", 0)),
+            )
+        )
+
         self._song_start_capture = ScreenCapture()
         self._song_start_detector = SongStartDetector(
             self._config
@@ -121,10 +138,10 @@ class SDVXPlayLogApp:
         self._song_start_monitor = SongStartMonitor(
             capture=self._song_start_capture,
             detector=self._song_start_detector,
-            region_x=int(song_start_region.get("x", 0)),
-            region_y=int(song_start_region.get("y", 0)),
-            region_width=int(song_start_region.get("width", 0)),
-            region_height=int(song_start_region.get("height", 0)),
+            region_x=song_start_roi.x,
+            region_y=song_start_roi.y,
+            region_width=song_start_roi.width,
+            region_height=song_start_roi.height,
             interval_seconds=float(
                 self._config.get(
                     "song_start_detection",

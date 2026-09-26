@@ -17,20 +17,20 @@ result_detection:
   interval_seconds: 1.0
   scale: 1.0
   region:
-    x: 1666
-    y: 584
-    width: 116
-    height: 462
+    x: 34
+    y: 1666
+    width: 462
+    height: 116
 
 song_start_detection:
   threshold: 0.85
   interval_seconds: 1.0
   scale: 1.0
   region:
-    x: 1529
-    y: 710
-    width: 72
-    height: 370
+    x: 0
+    y: 1529
+    width: 370
+    height: 72
 
 ocr:
   regions:
