@@ -780,6 +780,12 @@ class SDVXPlayLogApp:
     ) -> None:
         """結果画面を抜けたときの自動プレイ記録と一時画像処理。"""
 
+        if (
+            self._accepting_work
+            and self._state_manager.state == AppState.ACTIVE
+        ):
+            self._song_start_monitor.start()
+
         try:
             if self._result_record_handler is None:
                 return
@@ -835,14 +841,6 @@ class SDVXPlayLogApp:
             self._media_job_runner.cleanup_image(
                 state.screenshot_path
             )
-
-            # リザルト終了後、まだACTIVEなら次プレイの
-            # SongStart監視を再開する。
-            if (
-                self._accepting_work
-                and self._state_manager.state == AppState.ACTIVE
-            ):
-                self._song_start_monitor.start()
 
     # ================================================================
     # F12
