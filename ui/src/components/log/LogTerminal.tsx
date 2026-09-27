@@ -9,6 +9,7 @@ export function LogTerminal({
   onClose,
 }: Props) {
   const [fileName, setFileName] = useState('')
+  const [files, setFiles] = useState<string[]>([])
   const [content, setContent] = useState('')
   const [exists, setExists] = useState(true)
   const [height, setHeight] = useState(384)
@@ -29,6 +30,7 @@ export function LogTerminal({
       }
 
       setFileName(result.fileName)
+      setFiles(result.files)
       setContent(result.content)
       setExists(result.exists)
 
@@ -142,9 +144,40 @@ export function LogTerminal({
 
           <span className="h-1 w-1 shrink-0 bg-cyan-400" />
 
-          <span className="truncate font-mono text-[12px] tracking-[0.12em] text-zinc-600">
-            {fileName}
-          </span>
+          <select
+            value={fileName}
+            onChange={async (event) => {
+              const result =
+                await window.api.selectLogTerminal(
+                  event.target.value,
+                )
+
+              setFileName(result.fileName)
+              setContent(result.content)
+              setExists(result.exists)
+            }}
+            aria-label="Log file"
+            className="min-w-0 max-w-64 cursor-pointer bg-[#060910] font-mono text-[12px] tracking-[0.12em] text-zinc-500 outline-none transition hover:text-cyan-300 focus:text-cyan-300"
+          >
+            {!exists && fileName && (
+              <option
+                value={fileName}
+                className="bg-[#060910] text-zinc-500"
+              >
+                {fileName}
+              </option>
+            )}
+
+            {files.map((name) => (
+              <option
+                key={name}
+                value={name}
+                className="bg-[#060910] text-zinc-300"
+              >
+                {name}
+              </option>
+            ))}
+          </select>
 
           {!exists && (
             <span className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-amber-400/70">

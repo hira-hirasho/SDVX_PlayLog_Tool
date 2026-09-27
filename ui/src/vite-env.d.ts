@@ -111,13 +111,23 @@ declare global {
         exists: boolean
         fileName: string
         content: string
+        files: string[]
       }>
 
       readLogTerminal: () => Promise<{
         exists: boolean
         fileName: string
         content: string
+        files: string[]
       } | null>
+
+      selectLogTerminal: (
+        fileName: string,
+      ) => Promise<{
+        exists: boolean
+        fileName: string
+        content: string
+      }>
 
       closeLogTerminal: () => Promise<void>
 

@@ -34,6 +34,7 @@ const __dirname = path.dirname(__filename)
 const isDev = !app.isPackaged
 
 let logTerminalOpen = false
+let selectedLogFileName = ''
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -587,6 +588,69 @@ if (!gotTheLock) {
     return fs.readFileSync(soundPath).toString('base64')
   })
 
+  function getLogFiles() {
+    const logDirectory = path.join(
+      getDataRoot(),
+      'logs',
+    )
+
+    try {
+      return fs
+        .readdirSync(
+          logDirectory,
+          { withFileTypes: true },
+        )
+        .filter(
+          (entry) =>
+            entry.isFile() &&
+            entry.name.toLowerCase().endsWith('.log'),
+        )
+        .map((entry) => entry.name)
+        .sort()
+        .reverse()
+    } catch (error) {
+      if (error?.code === 'ENOENT') {
+        return []
+      }
+
+      throw error
+    }
+  }
+
+  async function readLogFile(
+    fileName,
+  ) {
+    const logPath = path.join(
+      getDataRoot(),
+      'logs',
+      fileName,
+    )
+
+    try {
+      const content =
+        await fs.promises.readFile(
+          logPath,
+          'utf-8',
+        )
+
+      return {
+        exists: true,
+        fileName,
+        content,
+      }
+    } catch (error) {
+      if (error?.code === 'ENOENT') {
+        return {
+          exists: false,
+          fileName,
+          content: '',
+        }
+      }
+
+      throw error
+    }
+  }
+
   ipcMain.handle(
     'log:open',
     async () => {
@@ -594,39 +658,38 @@ if (!gotTheLock) {
 
       const now = new Date()
 
-      const year = now.getFullYear()
-      const month = String(now.getMonth() + 1).padStart(2, '0')
-      const day = String(now.getDate()).padStart(2, '0')
+      const year =
+        now.getFullYear()
+      const month =
+        String(
+          now.getMonth() + 1,
+        ).padStart(2, '0')
+      const day =
+        String(
+          now.getDate(),
+        ).padStart(2, '0')
 
-      const fileName = `${year}${month}${day}.log`
+      const todayFileName =
+        `${year}${month}${day}.log`
 
-      const logPath = path.join(
-        getDataRoot(),
-        'logs',
-        fileName,
-      )
+      const files = getLogFiles()
 
-      try {
-        const content = await fs.promises.readFile(
-          logPath,
-          'utf-8',
-        )
+      selectedLogFileName =
+        files.includes(todayFileName)
+          ? todayFileName
+          : ''
 
-        return {
-          exists: true,
-          fileName,
-          content,
-        }
-      } catch (error) {
-        if (error?.code === 'ENOENT') {
-          return {
-            exists: false,
-            fileName,
-            content: '',
-          }
-        }
-
-        throw error
+      return {
+        ...(selectedLogFileName
+          ? await readLogFile(
+              selectedLogFileName,
+            )
+          : {
+              exists: false,
+              fileName: todayFileName,
+              content: '',
+            }),
+        files,
       }
     },
   )
@@ -638,42 +701,39 @@ if (!gotTheLock) {
         return null
       }
 
-      const now = new Date()
-
-      const year = now.getFullYear()
-      const month = String(now.getMonth() + 1).padStart(2, '0')
-      const day = String(now.getDate()).padStart(2, '0')
-
-      const fileName = `${year}${month}${day}.log`
-
-      const logPath = path.join(
-        getDataRoot(),
-        'logs',
-        fileName,
-      )
-
-      try {
-        const content = await fs.promises.readFile(
-          logPath,
-          'utf-8',
-        )
-
-        return {
-          exists: true,
-          fileName,
-          content,
-        }
-      } catch (error) {
-        if (error?.code === 'ENOENT') {
-          return {
-            exists: false,
-            fileName,
-            content: '',
-          }
-        }
-
-        throw error
+      return {
+        ...(await readLogFile(
+          selectedLogFileName,
+        )),
+        files: getLogFiles(),
       }
+    },
+  )
+
+  ipcMain.handle(
+    'log:select',
+    async (_event, fileName) => {
+      if (
+        typeof fileName !== 'string'
+      ) {
+        throw new Error(
+          'Invalid log file name',
+        )
+      }
+
+      const files = getLogFiles()
+
+      if (!files.includes(fileName)) {
+        throw new Error(
+          'Log file not found',
+        )
+      }
+
+      selectedLogFileName = fileName
+
+      return readLogFile(
+        selectedLogFileName,
+      )
     },
   )
 
@@ -681,6 +741,7 @@ if (!gotTheLock) {
     'log:close',
     () => {
       logTerminalOpen = false
+      selectedLogFileName = ''
     },
   )
 

@@ -73,6 +73,12 @@ contextBridge.exposeInMainWorld('api', {
       'log:read',
     ),
 
+  selectLogTerminal: (fileName) =>
+    ipcRenderer.invoke(
+      'log:select',
+      fileName,
+    ),
+
   closeLogTerminal: () =>
     ipcRenderer.invoke(
       'log:close',
