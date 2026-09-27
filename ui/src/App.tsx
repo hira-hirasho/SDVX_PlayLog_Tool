@@ -13,6 +13,7 @@ import { SettingsView } from './components/settings/SettingsView'
 import { SystemBackground } from './components/effects/SystemBackground'
 import { SystemSidebar } from './components/layout/SystemSidebar'
 import { LogTerminal } from './components/log/LogTerminal'
+import { MessageDialog } from './components/common/MessageDialog'
 
 import type { PlayLogRow } from './types/playLog'
 
@@ -53,6 +54,9 @@ export default function App() {
   const systemReady = useSystemReady()
 
   const [showLogTerminal, setShowLogTerminal] =
+    useState(false)
+
+  const [showTodaysSummaryMessage, setShowTodaysSummaryMessage] =
     useState(false)
 
   const { page, setPage } = usePagination()
@@ -98,13 +102,10 @@ export default function App() {
     const summary =
       await window.api.getTodaysPlaySummary(date)
 
-    if (summary.played === 0) {
-      await window.api.showMessageBox({
-        title: "TODAY'S SUMMARY",
-        message: '今日はまだSDVXをプレイしていないようです。',
-      })
-      return
-    }
+      if (summary.played === 0) {
+        setShowTodaysSummaryMessage(true)
+        return
+      }
 
     const displayDate = date.replaceAll('-', '.')
 
@@ -164,14 +165,14 @@ export default function App() {
     () => rows.find((row) => row.play_id === selectedId) ?? null,
     [rows, selectedId],
   )
-  
+
   const [updatedDetail, setUpdatedDetail] = useState<{
     playId: string
     row: PlayLogRow
   } | null>(null)
-  
+
   const baseDetailRow = navigationRow ?? selectedRow
-  
+
   const detailRow =
     baseDetailRow &&
     updatedDetail?.playId === baseDetailRow.play_id
@@ -532,6 +533,18 @@ export default function App() {
             )}
           </main>
         </div>
+
+        <MessageDialog
+          open={showTodaysSummaryMessage}
+          title="TODAY'S SUMMARY"
+          message="今日はまだSDVXをプレイしていないようです。"
+          actions={[
+            {
+              label: 'OK',
+              onClick: () => setShowTodaysSummaryMessage(false),
+            },
+          ]}
+        />
 
         {showLogTerminal && (
             <LogTerminal

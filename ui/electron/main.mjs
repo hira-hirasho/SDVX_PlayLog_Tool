@@ -580,6 +580,13 @@ if (!gotTheLock) {
     },
   )
 
+  ipcMain.handle('get-system-sound', () => {
+    const soundPath =
+      'C:\\Windows\\Media\\Windows Notify System Generic.wav'
+
+    return fs.readFileSync(soundPath).toString('base64')
+  })
+
   ipcMain.handle(
     'log:open',
     async () => {

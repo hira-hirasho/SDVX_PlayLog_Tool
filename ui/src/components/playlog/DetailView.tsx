@@ -11,6 +11,8 @@ import { LogTerminal } from '../log/LogTerminal'
 import { ClearTypeBadge } from './ClearTypeBadge'
 import { GradeBadge } from './GradeBadge'
 
+import { MessageDialog } from '../common/MessageDialog'
+
 import {
   difficultyColors,
   gradeColors,
@@ -1249,141 +1251,79 @@ export function DetailView({
                   document.body,
                 )
               : null}
-              {deleteTarget &&
-                createPortal(
-                  <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/75 px-6 backdrop-blur-sm">
-                    <div className="w-full max-w-md border border-zinc-700 bg-[#070a10] shadow-2xl">
-                      <div className="flex items-center gap-3 border-b border-zinc-800 px-6 py-4">
-                        <Trash2
-                          size={18}
-                          className={
-                            deleteTarget === 'result'
-                              ? 'text-cyan-300'
-                              : 'text-fuchsia-300'
-                          }
-                        />
+              <MessageDialog
+                open={deleteTarget !== null}
+                icon={Trash2}
+                title="MOVE TO TRASH"
+                accent={
+                  deleteTarget === 'result'
+                    ? 'cyan'
+                    : 'fuchsia'
+                }
+                message={
+                  deleteTarget === 'result'
+                    ? 'RESULT IMAGE'
+                    : 'REPLAY VIDEO'
+                }
+                description="このメディアをWindowsのゴミ箱へ移動しますか？"
+                detail="プレイ記録自体は削除されません。"
+                error={mediaDeleteError}
+                actions={[
+                  {
+                    label: 'MOVE TO TRASH',
+                    accent:
+                      deleteTarget === 'result'
+                        ? 'cyan'
+                        : 'fuchsia',
+                    loading: isDeletingMedia,
+                    loadingLabel: 'MOVING...',
+                    onClick: handleDeleteMedia,
+                  },
+                  {
+                    label: 'CANCEL',
+                    accent: 'zinc',
+                    disabled: isDeletingMedia,
+                    onClick: () => {
+                      setDeleteTarget(null)
+                      setMediaDeleteError(null)
+                    },
+                  },
+                ]}
+              />
 
-                        <span className="font-mono text-sm tracking-[0.18em] text-zinc-200">
-                          MOVE TO TRASH
-                        </span>
-                      </div>
-
-                      <div className="px-6 py-6">
-                        <p className="font-mono text-sm text-zinc-200">
-                          {deleteTarget === 'result'
-                            ? 'RESULT IMAGE'
-                            : 'REPLAY VIDEO'}
-                        </p>
-
-                        <p className="mt-3 text-sm leading-6 text-zinc-400">
-                          このメディアをWindowsのゴミ箱へ移動しますか？
-                        </p>
-
-                        <p className="mt-2 text-xs leading-5 text-zinc-600">
-                          プレイ記録自体は削除されません。
-                        </p>
-
-                        {mediaDeleteError && (
-                          <p className="mt-4 border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-300">
-                            {mediaDeleteError}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex justify-end gap-3 border-t border-zinc-800 px-6 py-4">
-                        <button
-                          type="button"
-                          disabled={isDeletingMedia}
-                          onClick={() => {
-                            setDeleteTarget(null)
-                            setMediaDeleteError(null)
-                          }}
-                          className="border border-zinc-800 px-4 py-2 font-mono text-xs tracking-[0.12em] text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          CANCEL
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={isDeletingMedia}
-                          onClick={handleDeleteMedia}
-                          className={
-                            deleteTarget === 'result'
-                              ? 'border border-cyan-400/50 bg-cyan-400/5 px-4 py-2 font-mono text-xs tracking-[0.12em] text-cyan-300 transition-colors hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-40'
-                              : 'border border-fuchsia-400/50 bg-fuchsia-400/5 px-4 py-2 font-mono text-xs tracking-[0.12em] text-fuchsia-300 transition-colors hover:bg-fuchsia-400/10 disabled:cursor-not-allowed disabled:opacity-40'
-                          }
-                        >
-                          {isDeletingMedia ? 'MOVING...' : 'MOVE TO TRASH'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>,
-                  document.body,
-                )}
-                {isRecordDeleteConfirmOpen &&
-                  createPortal(
-                    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/75 px-6 backdrop-blur-sm">
-                      <div className="w-full max-w-md border border-zinc-700 bg-[#070a10] shadow-2xl">
-                        <div className="flex items-center gap-3 border-b border-zinc-800 px-6 py-4">
-                          <Trash2
-                            size={18}
-                            className="text-red-300"
-                          />
-
-                          <span className="font-mono text-sm tracking-[0.18em] text-zinc-200">
-                            DELETE PLAY RECORD
-                          </span>
-                        </div>
-
-                        <div className="px-6 py-6">
-                          <p className="font-mono text-sm text-zinc-200">
-                            {row.song_name ?? 'UNKNOWN SONG'}
-                          </p>
-
-                          <p className="mt-3 text-sm leading-6 text-zinc-400">
-                            このプレイ記録を削除しますか？
-                          </p>
-
-                          <p className="mt-2 text-xs leading-5 text-zinc-600">
-                            プレイ記録をデータベースから削除し、
-                            関連するメディアもWindowsのゴミ箱へ移動します。
-                          </p>
-
-                          {recordDeleteError && (
-                            <p className="mt-4 border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-300">
-                              {recordDeleteError}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="flex justify-end gap-3 border-t border-zinc-800 px-6 py-4">
-                          <button
-                            type="button"
-                            disabled={isDeletingRecord}
-                            onClick={() => {
-                              setIsRecordDeleteConfirmOpen(false)
-                              setRecordDeleteError(null)
-                            }}
-                            className="border border-zinc-800 px-4 py-2 font-mono text-xs tracking-[0.12em] text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
-                          >
-                            CANCEL
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={isDeletingRecord}
-                            onClick={handleDeleteRecord}
-                            className="border border-red-400/50 bg-red-400/5 px-4 py-2 font-mono text-xs tracking-[0.12em] text-red-300 transition-colors hover:bg-red-400/10 disabled:cursor-not-allowed disabled:opacity-40"
-                          >
-                            {isDeletingRecord
-                              ? 'DELETING...'
-                              : 'DELETE'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>,
-                    document.body,
-                  )}
+              <MessageDialog
+                open={isRecordDeleteConfirmOpen}
+                icon={Trash2}
+                title="DELETE PLAY RECORD"
+                accent="red"
+                message={row.song_name ?? 'UNKNOWN SONG'}
+                description="このプレイ記録を削除しますか？"
+                detail={
+                  <>
+                    プレイ記録をデータベースから削除し、
+                    関連するメディアもWindowsのゴミ箱へ移動します。
+                  </>
+                }
+                error={recordDeleteError}
+                actions={[
+                  {
+                    label: 'DELETE',
+                    accent: 'red',
+                    loading: isDeletingRecord,
+                    loadingLabel: 'DELETING...',
+                    onClick: handleDeleteRecord,
+                  },
+                  {
+                    label: 'CANCEL',
+                    accent: 'zinc',
+                    disabled: isDeletingRecord,
+                    onClick: () => {
+                      setIsRecordDeleteConfirmOpen(false)
+                      setRecordDeleteError(null)
+                    },
+                  },
+                ]}
+              />
           </main>
 
           <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-px bg-linear-to-r from-cyan-400/40 via-zinc-800 to-fuchsia-400/40" />

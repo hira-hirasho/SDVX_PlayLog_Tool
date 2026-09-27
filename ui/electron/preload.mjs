@@ -58,6 +58,11 @@ contextBridge.exposeInMainWorld('api', {
       options,
     ),
 
+  getSystemSound: () =>
+    ipcRenderer.invoke(
+      'get-system-sound'
+    ),
+
   openLogTerminal: () =>
     ipcRenderer.invoke(
       'log:open',

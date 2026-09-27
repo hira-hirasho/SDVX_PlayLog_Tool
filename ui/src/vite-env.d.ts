@@ -105,6 +105,8 @@ declare global {
         response: number
       }>
 
+      getSystemSound: () => Promise<string>
+
       openLogTerminal: () => Promise<{
         exists: boolean
         fileName: string

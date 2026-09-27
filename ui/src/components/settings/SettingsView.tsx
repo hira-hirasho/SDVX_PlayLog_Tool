@@ -6,6 +6,7 @@ import {
 } from 'react'
 
 import {
+  AlertTriangle,
   FolderOpen,
   Keyboard,
   PlayCircle,
@@ -18,6 +19,7 @@ import { SystemBackground } from '../effects/SystemBackground'
 import { SystemPageHeader } from '../layout/SystemPageHeader'
 import { SystemSidebar } from '../layout/SystemSidebar'
 import { LogTerminal } from '../log/LogTerminal'
+import { MessageDialog } from '../common/MessageDialog'
 import {
   RoiEditor,
   type RoiItem,
@@ -823,6 +825,20 @@ export function SettingsView({
     null,
   )
 
+  type SettingsDialog =
+    | { type: 'unsaved-close' }
+    | {
+        type: 'unsaved-tab'
+        nextTab: SettingsTab
+      }
+    | { type: 'reset-main' }
+    | { type: 'reset-advanced' }
+    | { type: 'reset-roi' }
+    | null
+
+  const [settingsDialog, setSettingsDialog] =
+    useState<SettingsDialog>(null)
+
   const [loading, setLoading] =
     useState(true)
 
@@ -1412,32 +1428,6 @@ export function SettingsView({
     }
   }
 
-  const confirmAction = async ({
-    title,
-    message,
-    buttons,
-    defaultId,
-    cancelId,
-  }: {
-    title: string
-    message: string
-    buttons: string[]
-    defaultId: number
-    cancelId: number
-  }) => {
-    const result =
-      await window.api.showMessageBox({
-        title,
-        message,
-        type: 'question',
-        buttons,
-        defaultId,
-        cancelId,
-      })
-
-    return result.response
-  }
-
   const performSave = async (): Promise<boolean> => {
     if (
       !config ||
@@ -1530,49 +1520,21 @@ export function SettingsView({
     setError(null)
   }
 
-  const requestClose = async () => {
+  const requestClose = () => {
     if (!isDirty) {
       onBack()
       return
     }
 
-    const response =
-      await confirmAction({
-        title: 'UNSAVED CHANGES',
-        message:
-          '保存されていない設定があります。変更を保存して設定画面を閉じますか？',
-        buttons: [
-          'SAVE',
-          "DON'T SAVE",
-          'CANCEL',
-        ],
-        defaultId: 0,
-        cancelId: 2,
-      })
-
-    if (response === 0) {
-      const saved =
-        await performSave()
-
-      if (saved) {
-        onBack()
-      }
-
-      return
-    }
-
-    if (response === 1) {
-      discardChanges()
-      onBack()
-    }
+    setSettingsDialog({
+      type: 'unsaved-close',
+    })
   }
 
-  const requestTabChange = async (
+  const requestTabChange = (
     nextTab: SettingsTab,
   ) => {
-    if (
-      nextTab === activeTab
-    ) {
+    if (nextTab === activeTab) {
       return
     }
 
@@ -1581,58 +1543,24 @@ export function SettingsView({
       return
     }
 
-    const response =
-      await confirmAction({
-        title: 'UNSAVED CHANGES',
-        message:
-          '保存されていない設定があります。変更を保存してタブを切り替えますか？',
-        buttons: [
-          'SAVE',
-          "DON'T SAVE",
-          'CANCEL',
-        ],
-        defaultId: 0,
-        cancelId: 2,
-      })
-
-    if (response === 0) {
-      const saved =
-        await performSave()
-
-      if (saved) {
-        setActiveTab(nextTab)
-      }
-
-      return
-    }
-
-    if (response === 1) {
-      discardChanges()
-      setActiveTab(nextTab)
-    }
+    setSettingsDialog({
+      type: 'unsaved-tab',
+      nextTab,
+    })
   }
 
-  const resetMain = async () => {
+  const resetMain = () => {
     if (!config || !defaultConfig) {
       return
     }
 
-    const response =
-      await confirmAction({
-        title: 'RESET MAIN SETTINGS',
-        message:
-          'MAINの設定を初期値に戻します。変更はSAVEするまで反映されません。',
-        buttons: [
-          'RESET',
-          'CANCEL',
-        ],
-        defaultId: 0,
-        cancelId: 1,
-      })
+    setSettingsDialog({
+      type: 'reset-main',
+    })
+  }
 
-    if (response !== 0) {
-      return
-    }
+  const handleResetMain = () => {
+    setSettingsDialog(null)
 
     setConfig((current) => {
       if (!current) {
@@ -1643,23 +1571,23 @@ export function SettingsView({
         ...current,
         logging:
           cloneConfig(
-            defaultConfig,
+            defaultConfig!,
           ).logging,
         input:
           cloneConfig(
-            defaultConfig,
+            defaultConfig!,
           ).input,
         play_log:
           cloneConfig(
-            defaultConfig,
+            defaultConfig!,
           ).play_log,
         obs: {
           ...current.obs,
           executable_path:
-            defaultConfig.obs
+            defaultConfig!.obs
               .executable_path,
           scene_name:
-            defaultConfig.obs
+            defaultConfig!.obs
               .scene_name,
         },
       }
@@ -1669,154 +1597,127 @@ export function SettingsView({
     setError(null)
   }
 
-  const resetAdvanced =
-    async () => {
-      if (
-        !config ||
-        !defaultConfig
-      ) {
-        return
-      }
-
-      const response =
-        await confirmAction({
-          title:
-            'RESET ADVANCED SETTINGS',
-          message:
-            'ADVANCEDの設定を初期値に戻します。変更はSAVEするまで反映されません。',
-          buttons: [
-            'RESET',
-            'CANCEL',
-          ],
-          defaultId: 0,
-          cancelId: 1,
-        })
-
-      if (response !== 0) {
-        return
-      }
-
-      setConfig((current) => {
-        if (!current) {
-          return current
-        }
-
-        return {
-          ...current,
-          obs: {
-            ...current.obs,
-            websocket:
-              cloneConfig(
-                defaultConfig,
-              ).obs.websocket,
-          },
-          result_detection: {
-            ...current.result_detection,
-            threshold:
-              defaultConfig
-                .result_detection
-                .threshold,
-            interval_seconds:
-              defaultConfig
-                .result_detection
-                .interval_seconds,
-            scale:
-              defaultConfig
-                .result_detection
-                .scale,
-          },
-          song_start_detection: {
-            ...current
-              .song_start_detection,
-            threshold:
-              defaultConfig
-                .song_start_detection
-                .threshold,
-            interval_seconds:
-              defaultConfig
-                .song_start_detection
-                .interval_seconds,
-            scale:
-              defaultConfig
-                .song_start_detection
-                .scale,
-          },
-        }
-      })
-
-      setMessage(null)
-      setError(null)
+  const resetAdvanced = () => {
+    if (!config || !defaultConfig) {
+      return
     }
 
-    const resetRoi = async () => {
-      if (
-        !config ||
-        !defaultConfig
-      ) {
-        return
+    setSettingsDialog({
+      type: 'reset-advanced',
+    })
+  }
+
+  const handleResetAdvanced = () => {
+    setSettingsDialog(null)
+
+    setConfig((current) => {
+      if (!current) {
+        return current
       }
 
-      const response =
-        await confirmAction({
-          title: 'RESET SCREEN AREAS',
-          message:
-            'SCREEN AREASの設定とサンプル画像を初期値に戻します。変更はSAVEするまで反映されません。',
-          buttons: [
-            'RESET',
-            'CANCEL',
-          ],
-          defaultId: 0,
-          cancelId: 1,
-        })
-
-      if (response !== 0) {
-        return
+      return {
+        ...current,
+        obs: {
+          ...current.obs,
+          websocket:
+            cloneConfig(
+              defaultConfig!,
+            ).obs.websocket,
+        },
+        result_detection: {
+          ...current.result_detection,
+          threshold:
+            defaultConfig!
+              .result_detection
+              .threshold,
+          interval_seconds:
+            defaultConfig!
+              .result_detection
+              .interval_seconds,
+          scale:
+            defaultConfig!
+              .result_detection
+              .scale,
+        },
+        song_start_detection: {
+          ...current.song_start_detection,
+          threshold:
+            defaultConfig!
+              .song_start_detection
+              .threshold,
+          interval_seconds:
+            defaultConfig!
+              .song_start_detection
+              .interval_seconds,
+          scale:
+            defaultConfig!
+              .song_start_detection
+              .scale,
+        },
       }
+    })
 
-      const defaults =
-        cloneConfig(defaultConfig)
+    setMessage(null)
+    setError(null)
+  }
 
-      setConfig((current) => {
-        if (!current) {
-          return current
-        }
-
-        return {
-          ...current,
-          result_detection: {
-            ...current.result_detection,
-            region:
-              defaults.result_detection
-                .region,
-          },
-          song_start_detection: {
-            ...current.song_start_detection,
-            region:
-              defaults.song_start_detection
-                .region,
-          },
-          ocr: {
-            ...current.ocr,
-            regions:
-              defaults.ocr.regions,
-          },
-        }
-      })
-
-      if (resultDefault) {
-        setResultSample(resultDefault)
-      }
-
-      if (songStartDefault) {
-        setSongStartSample(
-          songStartDefault,
-        )
-      }
-
-      setSelectedRoiId(null)
-      setMessage(null)
-      setError(null)
+  const resetRoi = () => {
+    if (!config || !defaultConfig) {
+      return
     }
+
+    setSettingsDialog({
+      type: 'reset-roi',
+    })
+  }
+
+  const handleResetRoi = () => {
+    setSettingsDialog(null)
+
+    const defaults =
+      cloneConfig(defaultConfig!)
+
+    setConfig((current) => {
+      if (!current) {
+        return current
+      }
+
+      return {
+        ...current,
+        result_detection: {
+          ...current.result_detection,
+          region:
+            defaults.result_detection
+              .region,
+        },
+        song_start_detection: {
+          ...current.song_start_detection,
+          region:
+            defaults.song_start_detection
+              .region,
+        },
+        ocr: {
+          ...current.ocr,
+          regions:
+            defaults.ocr.regions,
+        },
+      }
+    })
+
+    if (resultDefault) {
+      setResultSample(resultDefault)
+    }
+
+    if (songStartDefault) {
+      setSongStartSample(
+        songStartDefault,
+      )
+    }
+
+    setSelectedRoiId(null)
+    setMessage(null)
+    setError(null)
+  }
 
   if (loading) {
     return (
@@ -2660,6 +2561,179 @@ export function SettingsView({
           </div>
         </div>
       </main>
+
+      <MessageDialog
+        open={settingsDialog?.type === 'unsaved-close'}
+        icon={AlertTriangle}
+        title="UNSAVED CHANGES"
+        message="保存されていない設定があります。"
+        description="変更を保存して設定画面を閉じますか？"
+        error={error}
+        actions={[
+          {
+            label: 'SAVE',
+            accent: 'cyan',
+            loading: saving,
+            loadingLabel: 'SAVING...',
+            onClick: () => {
+              void (async () => {
+                const saved = await performSave()
+
+                if (saved) {
+                  setSettingsDialog(null)
+                  onBack()
+                }
+              })()
+            },
+          },
+          {
+            label: "DON'T SAVE",
+            accent: 'zinc',
+            onClick: () => {
+              setSettingsDialog(null)
+              discardChanges()
+              onBack()
+            },
+          },
+          {
+            label: 'CANCEL',
+            accent: 'zinc',
+            onClick: () => {
+              setSettingsDialog(null)
+            },
+          },
+        ]}
+      />
+
+      <MessageDialog
+        open={settingsDialog?.type === 'unsaved-tab'}
+        icon={AlertTriangle}
+        title="UNSAVED CHANGES"
+        message="保存されていない設定があります。"
+        description="変更を保存してタブを切り替えますか？"
+        error={error}
+        actions={[
+          {
+            label: 'SAVE',
+            accent: 'cyan',
+            loading: saving,
+            loadingLabel: 'SAVING...',
+            onClick: () => {
+              if (
+                settingsDialog?.type !== 'unsaved-tab'
+              ) {
+                return
+              }
+
+              const nextTab =
+                settingsDialog.nextTab
+
+              void (async () => {
+                const saved = await performSave()
+
+                if (saved) {
+                  setSettingsDialog(null)
+                  setActiveTab(nextTab)
+                }
+              })()
+            },
+          },
+          {
+            label: "DON'T SAVE",
+            accent: 'zinc',
+            onClick: () => {
+              if (
+                settingsDialog?.type !== 'unsaved-tab'
+              ) {
+                return
+              }
+
+              const nextTab =
+                settingsDialog.nextTab
+
+              setSettingsDialog(null)
+              discardChanges()
+              setActiveTab(nextTab)
+            },
+          },
+          {
+            label: 'CANCEL',
+            accent: 'zinc',
+            onClick: () => {
+              setSettingsDialog(null)
+            },
+          },
+        ]}
+      />
+
+      <MessageDialog
+        open={settingsDialog?.type === 'reset-main'}
+        icon={RotateCcw}
+        title="RESET MAIN SETTINGS"
+        accent="red"
+        message="MAINの設定を初期値に戻します。"
+        description="変更はSAVEするまで反映されません。"
+        actions={[
+          {
+            label: 'RESET',
+            accent: 'red',
+            onClick: handleResetMain,
+          },
+          {
+            label: 'CANCEL',
+            accent: 'zinc',
+            onClick: () => {
+              setSettingsDialog(null)
+            },
+          },
+        ]}
+      />
+
+      <MessageDialog
+        open={settingsDialog?.type === 'reset-advanced'}
+        icon={RotateCcw}
+        title="RESET ADVANCED SETTINGS"
+        accent="red"
+        message="ADVANCEDの設定を初期値に戻します。"
+        description="変更はSAVEするまで反映されません。"
+        actions={[
+          {
+            label: 'RESET',
+            accent: 'red',
+            onClick: handleResetAdvanced,
+          },
+          {
+            label: 'CANCEL',
+            accent: 'zinc',
+            onClick: () => {
+              setSettingsDialog(null)
+            },
+          },
+        ]}
+      />
+
+      <MessageDialog
+        open={settingsDialog?.type === 'reset-roi'}
+        icon={RotateCcw}
+        title="RESET SCREEN AREAS"
+        accent="red"
+        message="SCREEN AREASの設定とサンプル画像を初期値に戻します。"
+        description="変更はSAVEするまで反映されません。"
+        actions={[
+          {
+            label: 'RESET',
+            accent: 'red',
+            onClick: handleResetRoi,
+          },
+          {
+            label: 'CANCEL',
+            accent: 'zinc',
+            onClick: () => {
+              setSettingsDialog(null)
+            },
+          },
+        ]}
+      />
 
       {showLogTerminal && (
         <LogTerminal
