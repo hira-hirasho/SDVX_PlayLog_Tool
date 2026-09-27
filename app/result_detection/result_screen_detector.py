@@ -1,11 +1,12 @@
 import cv2
 import numpy as np
 
-from app.core.config import AppConfig, PROJECT_ROOT
+from app.core.config import AppConfig
+from app.core.data_paths import get_resource_path
 
 
-RESULT_TEMPLATE_PATH = (
-    PROJECT_ROOT / "templates" / "result_screen.png"
+RESULT_TEMPLATE_PATH = get_resource_path(
+    "result_template.png",
 )
 
 
@@ -65,11 +66,6 @@ class ResultScreenDetector:
     ) -> bool:
         """Windows画面から取得したROIが結果画面か判定する。"""
 
-        if image is None:
-            raise ValueError(
-                "Result detection image must not be None"
-            )
-
         if image.ndim == 2:
             image_gray = image
         else:
@@ -81,23 +77,6 @@ class ResultScreenDetector:
         image_gray = self._resize(
             image_gray
         )
-
-        template_height, template_width = (
-            self._template.shape[:2]
-        )
-
-        image_height, image_width = image_gray.shape[:2]
-
-        if (
-            image_width != template_width
-            or image_height != template_height
-        ):
-            raise ValueError(
-                "Result detection image size does not match "
-                "template size. "
-                f"image={image_width}x{image_height}, "
-                f"template={template_width}x{template_height}"
-            )
 
         result = cv2.matchTemplate(
             image_gray,

@@ -6,6 +6,22 @@ contextBridge.exposeInMainWorld('api', {
       'config:get',
     ),
 
+  getSettingsResources: () =>
+    ipcRenderer.invoke(
+      'settings:get-resources',
+    ),
+
+  selectPngImage: () =>
+    ipcRenderer.invoke(
+      'settings:select-png',
+    ),
+
+  saveSettings: (payload) =>
+    ipcRenderer.invoke(
+      'settings:save',
+      payload,
+    ),
+
   saveConfig: (config) =>
     ipcRenderer.invoke(
       'config:save',

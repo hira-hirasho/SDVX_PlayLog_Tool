@@ -115,8 +115,11 @@ Write-Host "[6/8] Preparing local configuration..." -ForegroundColor Yellow
 $appDataRoot = Join-Path $env:LOCALAPPDATA "SDVX PlayLog Tool"
 $configPath = Join-Path $appDataRoot "config.yaml"
 $configExamplePath = Join-Path $ProjectRoot "config.example.yaml"
+$resourcesRoot = Join-Path $appDataRoot "resources"
+$resourcesTemplateRoot = Join-Path $ProjectRoot "asset\resources_template"
 
 New-Item -ItemType Directory -Force -Path $appDataRoot | Out-Null
+New-Item -ItemType Directory -Force -Path $resourcesRoot | Out-Null
 
 if (-not (Test-Path $configPath)) {
     if (-not (Test-Path $configExamplePath)) {
@@ -130,6 +133,32 @@ if (-not (Test-Path $configPath)) {
 else {
     Write-Host "  config.yaml already exists. Kept existing file." -ForegroundColor Green
 }
+
+$resourceFiles = @(
+    "result_default.png",
+    "result_sample.png",
+    "result_template.png",
+    "song_start_default.png",
+    "song_start_sample.png",
+    "song_start_template.png"
+)
+
+foreach ($file in $resourceFiles) {
+
+    $sourcePath = Join-Path $resourcesTemplateRoot $file
+    $destinationPath = Join-Path $resourcesRoot $file
+
+    if (-not (Test-Path $sourcePath)) {
+        throw "Resource file was not found: asset\resources_template\$file"
+    }
+
+    Copy-Item `
+        -Path $sourcePath `
+        -Destination $destinationPath `
+        -Force
+}
+
+Write-Host "  Copied resource images to LocalAppData." -ForegroundColor Green
 
 $envPath = Join-Path $ProjectRoot ".env"
 
@@ -175,8 +204,6 @@ Write-Host "  Data directory: $dataRoot" -ForegroundColor Green
 Write-Host "[8/8] Checking required files and tools..." -ForegroundColor Yellow
 
 $requiredFiles = @(
-    "templates\result_screen.png",
-    "templates\song_start.png",
     "asset\tray_icon.png"
 )
 

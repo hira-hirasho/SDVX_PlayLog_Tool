@@ -17,6 +17,8 @@ import { fileURLToPath } from 'node:url'
 import {
   getConfigPath,
   getDataRoot,
+  getResourceRoot,
+  getResourcePath,
 } from './paths.mjs'
 import {
   getPlayLogs,
@@ -95,6 +97,76 @@ if (!gotTheLock) {
     }
   }
 
+  function getProjectRoot() {
+    return path.resolve(
+      path.dirname(fileURLToPath(import.meta.url)),
+      '..',
+      '..',
+    )
+  }
+
+  function getBundledResourcePath(name) {
+    if (app.isPackaged) {
+      return path.join(
+        process.resourcesPath,
+        'resources',
+        name,
+      )
+    }
+
+    return path.join(
+      getProjectRoot(),
+      'resources',
+      name,
+    )
+  }
+
+  function getBundledConfigExamplePath() {
+    if (app.isPackaged) {
+      return path.join(
+        process.resourcesPath,
+        'config.example.yaml',
+      )
+    }
+
+    return path.join(
+      getProjectRoot(),
+      'config.example.yaml',
+    )
+  }
+
+  function bufferToDataUrl(buffer) {
+    return `data:image/png;base64,${buffer.toString('base64')}`
+  }
+
+  function readPngDataUrl(filePath) {
+    if (!fs.existsSync(filePath)) {
+      throw new Error(
+        `PNG resource not found: ${filePath}`,
+      )
+    }
+
+    return bufferToDataUrl(
+      fs.readFileSync(filePath),
+    )
+  }
+
+  function readCurrentOrDefault(
+    currentName,
+    defaultName,
+  ) {
+    const currentPath =
+      getResourcePath(currentName)
+
+    if (fs.existsSync(currentPath)) {
+      return readPngDataUrl(currentPath)
+    }
+
+    return readPngDataUrl(
+      getResourcePath(defaultName),
+    )
+  }
+
   ipcMain.handle('config:get', () => {
     const configPath = getConfigPath()
 
@@ -148,6 +220,308 @@ if (!gotTheLock) {
   )
 
   ipcMain.handle(
+    'settings:get-resources',
+    () => {
+      const configPath =
+        getConfigPath()
+
+      if (!fs.existsSync(configPath)) {
+        throw new Error(
+          `Config file not found: ${configPath}`,
+        )
+      }
+
+      const config = yaml.load(
+        fs.readFileSync(
+          configPath,
+          'utf-8',
+        ),
+      ) ?? {}
+
+      const defaultConfig =
+        yaml.load(
+          fs.readFileSync(
+            getBundledConfigExamplePath(),
+            'utf-8',
+          ),
+        ) ?? {}
+
+      return {
+        config,
+        defaultConfig,
+
+        resultSample:
+          readCurrentOrDefault(
+            'result_sample.png',
+            'result_default.png',
+          ),
+
+        songStartSample:
+          readCurrentOrDefault(
+            'song_start_sample.png',
+            'song_start_default.png',
+          ),
+
+        resultDefault:
+          readPngDataUrl(
+            getResourcePath(
+              'result_default.png',
+            ),
+          ),
+
+        songStartDefault:
+          readPngDataUrl(
+            getResourcePath(
+              'song_start_default.png',
+            ),
+          ),
+      }
+    },
+  )
+
+  ipcMain.handle(
+    'settings:select-png',
+    async () => {
+      const result =
+        await dialog.showOpenDialog({
+          properties: ['openFile'],
+          filters: [
+            {
+              name: 'PNG Images',
+              extensions: ['png'],
+            },
+          ],
+        })
+
+      if (
+        result.canceled ||
+        result.filePaths.length === 0
+      ) {
+        return null
+      }
+
+      return readPngDataUrl(
+        result.filePaths[0],
+      )
+    },
+  )
+
+  ipcMain.handle(
+    'settings:save',
+    async (_event, payload) => {
+      if (
+        !payload ||
+        typeof payload !== 'object'
+      ) {
+        throw new Error(
+          'Invalid settings payload',
+        )
+      }
+
+      const {
+        config,
+        resultSample,
+        songStartSample,
+        resultTemplate,
+        songStartTemplate,
+      } = payload
+
+      if (
+        !config ||
+        typeof config !== 'object' ||
+        Array.isArray(config)
+      ) {
+        throw new Error(
+          'Config must be a YAML mapping',
+        )
+      }
+
+      const configPath = getConfigPath()
+      const resourcesRoot = getResourceRoot()
+
+      fs.mkdirSync(
+        path.dirname(configPath),
+        { recursive: true },
+      )
+
+      fs.mkdirSync(
+        resourcesRoot,
+        { recursive: true },
+      )
+
+      const decodePng = (
+        dataUrl,
+        name,
+      ) => {
+        if (
+          typeof dataUrl !== 'string' ||
+          !dataUrl.startsWith(
+            'data:image/png;base64,',
+          )
+        ) {
+          throw new Error(
+            `${name} must be a PNG data URL`,
+          )
+        }
+
+        return Buffer.from(
+          dataUrl.slice(
+            'data:image/png;base64,'.length,
+          ),
+          'base64',
+        )
+      }
+
+      const configYaml =
+        yaml.dump(config, {
+          noRefs: true,
+          lineWidth: -1,
+        })
+
+        const files = [
+          {
+            target: configPath,
+            data: Buffer.from(
+              configYaml,
+              'utf-8',
+            ),
+          },
+          {
+            target: path.join(
+              resourcesRoot,
+              'result_sample.png',
+            ),
+            data: decodePng(
+              resultSample,
+              'resultSample',
+            ),
+          },
+          {
+            target: path.join(
+              resourcesRoot,
+              'song_start_sample.png',
+            ),
+            data: decodePng(
+              songStartSample,
+              'songStartSample',
+            ),
+          },
+          {
+            target: path.join(
+              resourcesRoot,
+              'result_template.png',
+            ),
+            data: decodePng(
+              resultTemplate,
+              'resultTemplate',
+            ),
+          },
+          {
+            target: path.join(
+              resourcesRoot,
+              'song_start_template.png',
+            ),
+            data: decodePng(
+              songStartTemplate,
+              'songStartTemplate',
+            ),
+          },
+        ]
+
+      const transactionId =
+        `${Date.now()}-${process.pid}`
+
+      const temporary = []
+      const backups = []
+
+      try {
+        for (const file of files) {
+          const target = file.target
+
+          const temp =
+            `${target}.tmp-${transactionId}`
+
+          fs.writeFileSync(
+            temp,
+            file.data,
+          )
+
+          temporary.push({
+            target,
+            temp,
+          })
+        }
+
+        for (const file of temporary) {
+          if (fs.existsSync(file.target)) {
+            const backup =
+              `${file.target}.bak-${transactionId}`
+
+            fs.renameSync(
+              file.target,
+              backup,
+            )
+
+            backups.push({
+              target: file.target,
+              backup,
+            })
+          }
+        }
+
+        for (const file of temporary) {
+          fs.renameSync(
+            file.temp,
+            file.target,
+          )
+        }
+
+        for (const backup of backups) {
+          fs.rmSync(
+            backup.backup,
+            { force: true },
+          )
+        }
+
+        return {
+          saved: true,
+        }
+      } catch (error) {
+        for (const file of temporary) {
+          fs.rmSync(
+            file.temp,
+            { force: true },
+          )
+        }
+
+        for (
+          const file of temporary
+        ) {
+          fs.rmSync(
+            file.target,
+            { force: true },
+          )
+        }
+
+        for (const backup of backups) {
+          if (
+            fs.existsSync(
+              backup.backup,
+            )
+          ) {
+            fs.renameSync(
+              backup.backup,
+              backup.target,
+            )
+          }
+        }
+
+        throw error
+      }
+    },
+  )
+
+  ipcMain.handle(
     'config:select-file',
     async (_event, options = {}) => {
       const result = await dialog.showOpenDialog({
@@ -173,18 +547,32 @@ if (!gotTheLock) {
 
   ipcMain.handle(
     'app:show-message-box',
-    async (_event, options = {}) => {
-      const result = await dialog.showMessageBox({
-        type: 'info',
-        title:
-          typeof options.title === 'string'
-            ? options.title
-            : 'SDVX PlayLog Tool',
-        message:
-          typeof options.message === 'string'
-            ? options.message
-            : '',
-      })
+    async (_event, options) => {
+      const result =
+        await dialog.showMessageBox({
+          type:
+            options?.type ?? 'info',
+
+          title:
+            options?.title ?? '',
+
+          message:
+            options?.message ?? '',
+
+          buttons:
+            Array.isArray(
+              options?.buttons,
+            ) &&
+            options.buttons.length > 0
+              ? options.buttons
+              : ['OK'],
+
+          defaultId:
+            options?.defaultId,
+
+          cancelId:
+            options?.cancelId,
+        })
 
       return {
         response: result.response,

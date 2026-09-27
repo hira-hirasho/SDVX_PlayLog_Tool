@@ -13,6 +13,16 @@
   },
   "build": {
     "appId": "com.sdvx.playlogtool",
+    "extraResources": [
+      {
+        "from": "../resources",
+        "to": "resources"
+      },
+      {
+        "from": "../config.example.yaml",
+        "to": "config.example.yaml"
+      }
+    ],
     "productName": "SDVX PlayLog Tool",
     "directories": {
       "output": "release"

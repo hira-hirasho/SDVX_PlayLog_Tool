@@ -4,11 +4,12 @@ import cv2
 import numpy as np
 from loguru import logger
 
-from app.core.config import AppConfig, PROJECT_ROOT
+from app.core.config import AppConfig
+from app.core.data_paths import get_resource_path
 
 
-SONG_START_TEMPLATE_PATH = (
-    PROJECT_ROOT / "templates" / "song_start.png"
+SONG_START_TEMPLATE_PATH = get_resource_path(
+    "song_start_template.png",
 )
 
 
@@ -89,31 +90,6 @@ class SongStartDetector:
 
         template = self._resize(template)
 
-        template_height, template_width = (
-            template.shape[:2]
-        )
-
-        expected_width = int(
-            self._region_width * self._scale
-        )
-        expected_height = int(
-            self._region_height * self._scale
-        )
-
-        if (
-            template_width != expected_width
-            or template_height != expected_height
-        ):
-            raise ValueError(
-                "Invalid song start template size: "
-                f"expected="
-                f"{expected_width}x"
-                f"{expected_height}, "
-                f"actual="
-                f"{template_width}x"
-                f"{template_height}"
-            )
-
         self._template = template
 
     def is_song_start(
@@ -134,33 +110,23 @@ class SongStartDetector:
             gray
         )
 
-        template_height, template_width = (
-            self._template.shape[:2]
+        template = cv2.resize(
+            self._template,
+            (
+                gray.shape[1],
+                gray.shape[0],
+            ),
+            interpolation=cv2.INTER_AREA,
         )
-
-        image_height, image_width = (
-            gray.shape[:2]
-        )
-
-        if (
-            image_width < template_width
-            or image_height < template_height
-        ):
-            return False
 
         result = cv2.matchTemplate(
             gray,
-            self._template,
+            template,
             cv2.TM_CCOEFF_NORMED,
         )
 
         _, max_value, _, _ = cv2.minMaxLoc(
             result
-        )
-
-        logger.debug(
-            "SONG_START: score={:.6f}",
-            max_value,
         )
 
         return max_value >= self._threshold

@@ -30,3 +30,13 @@ def resolve_data_path(path_value: str | Path) -> Path:
         return path
 
     return get_data_root() / path
+
+
+def get_resource_root() -> Path:
+    """アプリ管理リソースのルートを取得する。"""
+    return get_app_data_root() / "resources"
+
+
+def get_resource_path(name: str) -> Path:
+    """アプリ管理リソースのパスを取得する。"""
+    return get_resource_root() / name

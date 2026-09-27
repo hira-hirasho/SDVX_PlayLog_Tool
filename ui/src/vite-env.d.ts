@@ -10,6 +10,27 @@ declare global {
     api: {
       getConfig: () => Promise<Record<string, unknown>>
 
+      getSettingsResources: () => Promise<{
+        config: Record<string, unknown>
+        defaultConfig: Record<string, unknown>
+        resultSample: string
+        songStartSample: string
+        resultDefault: string
+        songStartDefault: string
+      }>
+
+      selectPngImage: () => Promise<string | null>
+
+      saveSettings: (payload: {
+        config: Record<string, unknown>
+        resultSample: string
+        songStartSample: string
+        resultTemplate: string
+        songStartTemplate: string
+      }) => Promise<{
+        saved: boolean
+      }>
+
       saveConfig: (
         config: Record<string, unknown>,
       ) => Promise<{
@@ -76,6 +97,10 @@ declare global {
       showMessageBox: (options: {
         title?: string
         message: string
+        type?: 'none' | 'info' | 'error' | 'question' | 'warning'
+        buttons?: string[]
+        defaultId?: number
+        cancelId?: number
       }) => Promise<{
         response: number
       }>

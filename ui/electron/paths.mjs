@@ -26,3 +26,17 @@ export function getDataRoot() {
     'data',
   )
 }
+
+export function getResourceRoot() {
+  return path.join(
+    getAppDataRoot(),
+    'resources',
+  )
+}
+
+export function getResourcePath(name) {
+  return path.join(
+    getResourceRoot(),
+    name,
+  )
+}
