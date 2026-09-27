@@ -15,7 +15,7 @@
     "appId": "com.sdvx.playlogtool",
     "extraResources": [
       {
-        "from": "../resources",
+        "from": "../asset/resources_template",
         "to": "resources"
       },
       {
