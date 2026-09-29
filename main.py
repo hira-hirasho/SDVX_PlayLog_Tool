@@ -36,7 +36,10 @@ from app.database.play_log import PlayLogDatabase
 from app.database.play_record import PlayRecordService
 from app.media.job import MediaJob
 from app.media.job_runner import MediaJobRunner
-from app.media.processor import MediaProcessor
+from app.media.processor import (
+    MediaProcessResult,
+    MediaProcessor,
+)
 from app.media.replay_video_saver import ReplayVideoSaver
 from app.obs.launcher import OBSLauncher
 from app.obs.websocket import OBSWebSocket
@@ -898,6 +901,8 @@ class SDVXPlayLogApp:
             )
             return
 
+        self._play_f12_accepted_sound()
+
         result_image_path = state.screenshot_path
 
         if not self._media_job_runner.reserve_image(
@@ -977,8 +982,6 @@ class SDVXPlayLogApp:
                 replay_elapsed_seconds,
             )
 
-            self._play_f12_sound()
-
         except Exception:
             logger.exception(
                 "F12: failed to create media job: play_id={}",
@@ -993,25 +996,42 @@ class SDVXPlayLogApp:
     # Helpers
     # ================================================================
 
-    def _play_f12_sound(self) -> None:
-        """F12による保存受付完了時のサウンドを非同期再生する。"""
+    def _play_f12_accepted_sound(self) -> None:
+        """F12受付音を非同期再生する。"""
         Thread(
-            target=self._generate_and_play_f12_sound,
-            name="F12Sound",
+            target=self._generate_and_play_sound,
+            args=(
+                [
+                    ([261.63, 392.00, 523.25], 70, 0.9, 0.10),
+                    ([261.63, 392.00, 523.25], 70, 0.9, 0.10),
+                ],
+            ),
+            name="F12AcceptedSound",
+            daemon=True,
+        ).start()
+
+    def _play_save_complete_sound(self) -> None:
+        """動画保存完了音を非同期再生する。"""
+        Thread(
+            target=self._generate_and_play_sound,
+            args=(
+                [
+                    ([261.63, 392.00, 523.25], 70, 0.9, 0.10),
+                    ([392.00, 493.88, 587.33, 783.99], 185, 0.95, 0.12),
+                ],
+            ),
+            name="SaveCompleteSound",
             daemon=True,
         ).start()
 
     @staticmethod
-    def _generate_and_play_f12_sound() -> None:
-        """F12サウンドを生成して再生する。"""
+    def _generate_and_play_sound(
+        chords: list[tuple[list[float], int, float, float]],
+    ) -> None:
+        """指定したコード構成のサウンドを生成して再生する。"""
+
         rate = 44100
         volume = 0.022
-
-        chords = [
-            ([261.63, 392.00, 523.25], 70, 0.9, 0.10),
-            ([392.00, 493.88, 587.33, 783.99], 185, 0.95, 0.12),
-        ]
-
         data = bytearray()
 
         for freqs, duration_ms, chord_volume, harmonic in chords:
@@ -1076,8 +1096,21 @@ class SDVXPlayLogApp:
             winsound.SND_MEMORY,
         )
 
-    def _on_media_job_completed(self) -> None:
+    def _on_media_job_completed(
+        self,
+        job: MediaJob,
+        result: MediaProcessResult | None,
+    ) -> None:
         """MediaJob完了後に必要なアプリケーション処理を行う。"""
+
+        # F12の動画保存が正常に完了した場合だけ完了音を鳴らす。
+        if (
+            job.save_video
+            and result is not None
+            and result.video_saved
+        ):
+            self._play_save_complete_sound()
+
         if (
             not self._accepting_work
             and self._state_manager.state == AppState.SLEEP

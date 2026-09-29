@@ -17,7 +17,10 @@ class MediaJobRunner:
         self,
         *,
         processor: MediaProcessor,
-        on_completed: Callable[[], None] | None = None,
+        on_completed: Callable[
+            [MediaJob, MediaProcessResult | None],
+            None,
+        ] | None = None,
     ) -> None:
         self._processor = processor
         self._on_completed = on_completed
@@ -150,6 +153,7 @@ class MediaJobRunner:
     ) -> None:
         """MediaJobを実行する。"""
 
+        result: MediaProcessResult | None = None
         image_saved = False
 
         try:
@@ -174,6 +178,7 @@ class MediaJobRunner:
         finally:
             self._finish_job(
                 job,
+                result,
                 image_saved,
             )
 
@@ -212,6 +217,7 @@ class MediaJobRunner:
     def _finish_job(
         self,
         job: MediaJob,
+        result: MediaProcessResult | None,
         image_saved: bool,
     ) -> None:
         """MediaJob完了時の後処理を行う。"""
@@ -237,7 +243,10 @@ class MediaJobRunner:
 
         if self._on_completed is not None:
             try:
-                self._on_completed()
+                self._on_completed(
+                    job,
+                    result,
+                )
             except Exception:
                 logger.exception(
                     "MEDIA: completion callback failed "
